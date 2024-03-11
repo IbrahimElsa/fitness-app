@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faHistory, faPlus, faDumbbell } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faHistory, faPlus, faDumbbell, faPerson } from '@fortawesome/free-solid-svg-icons';
 
 const MobileNavbar = () => {
   return (
@@ -21,6 +21,10 @@ const MobileNavbar = () => {
         <a href="#" className="flex flex-col items-center w-full">
           <FontAwesomeIcon icon={faDumbbell} size="lg" />
           <span className="text-xs">Exercises</span>
+        </a>
+        <a href="#" className="flex flex-col items-center w-full">
+          <FontAwesomeIcon icon={faPerson} size="lg" />
+          <span className="text-xs">Coach</span>
         </a>
       </div>
     </div>
