@@ -1,31 +1,32 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faHistory, faPlus, faDumbbell, faPerson } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 
 const MobileNavbar = () => {
   return (
     <div className="fixed bottom-0 inset-x-0 bg-blue-500 text-white py-2 md:hidden">
       <div className="flex justify-between">
-        <a href="#" className="flex flex-col items-center w-full">
+        <Link to="/" className="flex flex-col items-center w-full"> {/* Use Link with to="/" */}
           <FontAwesomeIcon icon={faHome} size="lg" />
           <span className="text-xs">Home</span>
-        </a>
-        <a href="#" className="flex flex-col items-center w-full">
+        </Link>
+        <Link to="/history" className="flex flex-col items-center w-full"> {/* Use Link with to="/history" */}
           <FontAwesomeIcon icon={faHistory} size="lg" />
           <span className="text-xs">History</span>
-        </a>
-        <a href="#" className="flex flex-col items-center w-full">
+        </Link>
+        <Link to="/workout" className="flex flex-col items-center w-full"> {/* Use Link with to="/workout" */}
           <FontAwesomeIcon icon={faPlus} size="lg" />
           <span className="text-xs">Workout</span>
-        </a>
-        <a href="#" className="flex flex-col items-center w-full">
+        </Link>
+        <Link to="/exercises" className="flex flex-col items-center w-full"> {/* Use Link with to="/exercises" */}
           <FontAwesomeIcon icon={faDumbbell} size="lg" />
           <span className="text-xs">Exercises</span>
-        </a>
-        <a href="#" className="flex flex-col items-center w-full">
+        </Link>
+        <Link to="/coach" className="flex flex-col items-center w-full"> {/* Use Link with to="/coach" */}
           <FontAwesomeIcon icon={faPerson} size="lg" />
           <span className="text-xs">Coach</span>
-        </a>
+        </Link>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ function Home() {
 return (
     <div>
         <Navbar />
-        <h1 className="text-3xl ">Exercises</h1>
+        <h1 className="text-3xl ">Coach</h1>
         <MobileNavbar />
     </div>
 );}
