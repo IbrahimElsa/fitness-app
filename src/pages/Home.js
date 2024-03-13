@@ -39,7 +39,7 @@ return (
         <Navbar />
         <div className="flex flex-col items-center h-screen bg-gray-200 p-4">
             <h1 className="text-3xl mb-4">Home</h1>
-                <div style={{ width: '100%', height: '40%' }} className="border-">
+                <div style={{ width: '100%', height: '40%' }} className="border-2 border-gray-600 rounded-2xl">
                 <ResponsiveContainer>
                     <BarChart data={data} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
