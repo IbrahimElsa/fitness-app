@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/Login';
 import Home from './pages/Home';
 import History from './pages/History';
 import Workout from './pages/Workout';
@@ -11,6 +12,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/history" element={<History />} />
         <Route path="/workout" element={<Workout />} />
         <Route path="/exercises" element={<Exercises />} />
