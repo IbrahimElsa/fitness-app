@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { useNavigate } from 'react-router-dom';
-import { login } from '../firebaseAuthServices';
+import { login as firebaseLogin } from '../firebaseAuthServices'; 
 import { Link } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { currentUser, login } = useAuth(); // Use login from useAuth
+
+    useEffect(() => {
+        if (currentUser) {
+            navigate('/'); // Redirect to home if user is logged in
+        }
+    }, [currentUser, navigate]); // Add dependencies here
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
 
         try {
-            await login(email, password);
-            navigate('/');
+            await firebaseLogin(email, password); // Use the renamed firebaseLogin
+            login(); 
         } catch (error) {
             setError(error.message);
         }
