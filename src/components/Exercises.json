@@ -1,0 +1,324 @@
+{
+    "Exercises": [
+        {
+            "Name": "Bench Press (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Bench Press (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Bench Press (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Chest Press (Machine)",
+            "Category": "Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Chest Fly (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Chest Fly (Machine)",
+            "Category": "Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Chest Fly (Cable)",
+            "Category": "Cable",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Pec Deck",
+            "Category": "Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Push Up",
+            "Category": "Bodyweight",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Dip",
+            "Category": "Bodyweight",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Dip (Machine)",
+            "Category": "Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Incline Bench Press (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Incline Bench Press (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Incline Bench Press (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Incline Chest Press (Machine)",
+            "Category": "Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Decline Bench Press (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Decline Bench Press (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Decline Bench Press (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Decline Chest Press (Machine)",
+            "Category": "Machine",
+            "Muscle": "Chest"
+        },
+        {
+            "Name": "Bent Over Row (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Bent Over Row (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Bent Over Row (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Seated Row (Machine)",
+            "Category": "Machine",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Lat Pulldown (Machine)",
+            "Category": "Machine",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Lat Pulldown (Cable)",
+            "Category": "Cable",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Pull Up",
+            "Category": "Bodyweight",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Chin Up",
+            "Category": "Bodyweight",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Deadlift (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Shrug (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Shrug (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Back"
+        },
+        {
+            "Name": "Squat (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Squat (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Leg Press (Machine)",
+            "Category": "Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Leg Extension (Machine)",
+            "Category": "Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Leg Curl (Machine)",
+            "Category": "Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Hack Squat (Machine)",
+            "Category": "Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Pendulum Squat (Machine)",
+            "Category": "Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Lunge (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Lunge (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Lunge (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Calf Raise (Machine)",
+            "Category": "Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Calf Raise (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Legs"
+        },
+        {
+            "Name": "Shoulder Press (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Shoulders"
+        },
+        {
+            "Name": "Shoulder Press (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Shoulders"
+        },
+        {
+            "Name": "Shoulder Press (Smith Machine)",
+            "Category": "Smith Machine",
+            "Muscle": "Shoulders"
+        },
+        {
+            "Name": "Shoulder Press (Machine)",
+            "Category": "Machine",
+            "Muscle": "Shoulders"
+        },
+        {
+            "Name": "Lateral Raise (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Shoulders"
+        },
+        {
+            "Name": "Lateral Raise (Cable)",
+            "Category": "Cable",
+            "Muscle": "Shoulders"
+        },
+        {
+            "Name": "Tricep Extension (Cable)",
+            "Category": "Cable",
+            "Muscle": "Triceps"
+        },
+        {
+            "Name": "Tricep Extension (Machine)",
+            "Category": "Machine",
+            "Muscle": "Triceps"
+        },
+        {
+            "Name": "Tricep Pushdown (Cable)",
+            "Category": "Cable",
+            "Muscle": "Triceps"
+        },
+        {
+            "Name": "Bicep Curl (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Bicep Curl (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Bicep Curl (Cable)",
+            "Category": "Cable",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Bicep Curl (Machine)",
+            "Category": "Machine",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Preacher Curl (Barbell)",
+            "Category": "Barbell",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Preacher Curl (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Preacher Curl (Machine)",
+            "Category": "Machine",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Hammer Curl (Dumbbell)",
+            "Category": "Dumbbell",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Hammer Curl (Cable)",
+            "Category": "Cable",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Hammer Curl (Machine)",
+            "Category": "Machine",
+            "Muscle": "Biceps"
+        },
+        {
+            "Name": "Crunch",
+            "Category": "Bodyweight",
+            "Muscle": "Abs"
+        },
+        {
+            "Name": "Sit Up",
+            "Category": "Bodyweight",
+            "Muscle": "Abs"
+        },
+        {
+            "Name": "Leg Raise",
+            "Category": "Bodyweight",
+            "Muscle": "Abs"
+        }
+    ]
+}

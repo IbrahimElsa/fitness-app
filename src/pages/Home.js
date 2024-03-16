@@ -63,7 +63,6 @@ function Home() {
                     )}
                 </div>
                     ) : (
-                        // Show login button if not logged in
                         <button
                             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                             onClick={() => navigate('/login')}
