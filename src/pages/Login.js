@@ -22,7 +22,7 @@ const LoginPage = () => {
 
         try {
             await login(email, password);
-            
+            console.log('Logged in');
         } catch (error) {
             setError(error.message);
         }
@@ -90,7 +90,7 @@ const LoginPage = () => {
                     <div className="mt-6 text-center">
             <p className="text-gray-600">
                 Don't have an account?{" "}
-                <Link to="/register" className="text-blue-600 hover:text-blue-500"> {/* Change this to /register */}
+                <Link to="/register" className="text-blue-600 hover:text-blue-500"> 
                     Sign up
                 </Link>
             </p>

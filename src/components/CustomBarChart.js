@@ -3,8 +3,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const renderCustomBarShape = ({ fill, x, y, width, height, value }) => {
     const gapHeight = 2;
-    const dayHeight = (height - (value - 1) * gapHeight) / value;
-    
+    const totalGapsHeight = (value - 1) * gapHeight;
+    const usableHeight = Math.max(0, height - totalGapsHeight);
+    const dayHeight = value > 0 ? usableHeight / value : 0;
+
     let shapes = [];
     for (let i = 0; i < value; i++) {
         shapes.push(
@@ -18,9 +20,10 @@ const renderCustomBarShape = ({ fill, x, y, width, height, value }) => {
             />
         );
     }
-    
+
     return <g>{shapes}</g>;
 };
+
 
 const CustomBarChart = ({ data }) => (
     <div style={{ width: '100%', height: '40%' }} >

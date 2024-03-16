@@ -1,5 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signOut,
+    reauthenticateWithCredential,
+    EmailAuthProvider,
+    deleteUser as firebaseDeleteUser
+} from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -21,9 +28,28 @@ export const AuthProvider = ({ children }) => {
         return signOut(auth);
     };
 
+    const deleteUser = async (password) => {
+        if (!currentUser) {
+        throw new Error("No user is currently logged in.");
+    }
+
+    const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        password
+    );
+
+    try {
+        await reauthenticateWithCredential(currentUser, credential);
+        await firebaseDeleteUser(currentUser);
+        } catch (error) {
+        throw error;
+        }
+    };
+
     const value = {
         currentUser,
         logout,
+        deleteUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

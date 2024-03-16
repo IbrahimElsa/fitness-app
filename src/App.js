@@ -8,6 +8,7 @@ import History from './pages/History';
 import Workout from './pages/Workout';
 import Exercises from './pages/Exercises';
 import Coach from './pages/Coach';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/history" element={<History />} />
           <Route path="/workout" element={<Workout />} />
           <Route path="/exercises" element={<Exercises />} />
