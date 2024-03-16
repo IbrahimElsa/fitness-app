@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'; 
-import { useNavigate } from 'react-router-dom';
-import { login as firebaseLogin } from '../firebaseAuthServices'; 
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { login } from '../firebaseAuthServices'; 
 import { useAuth } from '../AuthContext';
 
 const LoginPage = () => {
@@ -9,21 +8,21 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { currentUser, login } = useAuth(); // Use login from useAuth
+    const { currentUser} = useAuth();
 
     useEffect(() => {
         if (currentUser) {
-            navigate('/'); // Redirect to home if user is logged in
+            navigate('/');
         }
-    }, [currentUser, navigate]); // Add dependencies here
+    }, [currentUser, navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
 
         try {
-            await firebaseLogin(email, password); // Use the renamed firebaseLogin
-            login(); 
+            await login(email, password);
+            
         } catch (error) {
             setError(error.message);
         }
