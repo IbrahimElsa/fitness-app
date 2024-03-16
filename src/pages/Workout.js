@@ -2,7 +2,7 @@ import React from "react";
 import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 
-function Home() {
+function WorkoutPage() {
     return (
         <div className="flex flex-col h-screen">
             <Navbar />
@@ -60,4 +60,4 @@ function Home() {
     );
 }
 
-export default Home;
+export default WorkoutPage;

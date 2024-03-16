@@ -2,7 +2,7 @@ import React from "react";
 import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 
-function Home() {
+function CoachPage() {
 return (
     <div>
         <Navbar />
@@ -11,4 +11,4 @@ return (
     </div>
 );}
 
-export default Home;
+export default CoachPage;
