@@ -4,6 +4,8 @@ import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
 import { useAuth } from "../AuthContext";
 import Modal from "../components/Modal";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 
 function Profile() {
     const navigate = useNavigate();
@@ -43,8 +45,16 @@ function Profile() {
             <div className="flex flex-col h-screen bg-gray-200">
                 <div className="px-4 py-2 w-full">
                     <h1 className="text-3xl pt-12 pl-6">Profile</h1>
+                    
                     <div className="flex flex-col justify-center items-center flex-1">
                         {/* Logout button */}
+                        <div className="w-full flex justify-center">
+                            <FontAwesomeIcon 
+                                icon={faUserCircle} 
+                                size="9x" 
+                                className="mt-12 text-gray-700 pb-10"
+                            />
+                        </div>
                         <button
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4"
                             onClick={handleLogout}
@@ -63,7 +73,7 @@ function Profile() {
             <MobileNavbar />
             {modalOpen && (
                 <Modal title="Confirm Account Deletion" onClose={() => setModalOpen(false)}>
-                    <div className="p-4 w-11/12"> {/* Adjust the width as needed here */}
+                    <div className="p-4 w-11/12">
                         {error && <p className="text-red-500">{error}</p>}
                         <p>Please enter your password to confirm deletion.</p>
                         <input
@@ -89,8 +99,7 @@ function Profile() {
                         </div>
                     </div>
                 </Modal>
-                )}
-
+            )}
         </div>
     );
 }

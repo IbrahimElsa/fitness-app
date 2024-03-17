@@ -9,20 +9,11 @@ import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 
 function Home() {
     const navigate = useNavigate();
-    const { currentUser, logout } = useAuth();
+    const { currentUser } = useAuth();
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const handleToggleDropdown = () => {
         setDropdownOpen(!dropdownOpen);
-    };
-
-    const handleLogout = async () => {
-        try {
-            await logout(); // Call the logout method from your AuthContext
-            navigate('/');
-        } catch (error) {
-            console.error('Logout failed', error);
-        }
     };
 
     const data = [
@@ -53,12 +44,7 @@ function Home() {
                             <Link to="/profile" className="block px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white">
                                 Profile
                             </Link>
-                            <button 
-                                onClick={handleLogout} 
-                                className="block w-full text-left px-4 py-2 text-sm capitalize text-gray-700 hover:bg-blue-500 hover:text-white"
-                            >
-                                Logout
-                            </button>
+
                         </div>
                     )}
                 </div>
