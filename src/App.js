@@ -6,6 +6,7 @@ import RegisterPage from './pages/Register';
 import Home from './pages/Home';
 import History from './pages/History';
 import Workout from './pages/Workout';
+import ActiveWorkout from './pages/ActiveWorkout';
 import Exercises from './pages/Exercises';
 import Coach from './pages/Coach';
 import Profile from './pages/Profile';
@@ -21,6 +22,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/history" element={<History />} />
           <Route path="/workout" element={<Workout />} />
+          <Route path="/active-workout" element={<ActiveWorkout />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/coach" element={<Coach />} />
         </Routes>

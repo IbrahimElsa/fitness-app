@@ -1,14 +1,24 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 
 function WorkoutPage() {
+    const navigate = useNavigate();
+
+    const startWorkout = () => {
+        navigate('/active-workout');
+    };
+
     return (
         <div className="flex flex-col h-screen">
             <Navbar />
             <div className="flex-1 bg-gray-800 text-white p-4 overflow-y-auto">
                 <h1 className="text-3xl mb-4">Workout</h1>
-                <div className="bg-blue-600 hover:bg-blue-700 text-white text-center font-bold py-3 rounded mb-4">
+                <div 
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-center font-bold py-3 rounded mb-4 cursor-pointer"
+                    onClick={startWorkout}
+                >
                     START AN EMPTY WORKOUT
                 </div>
                 <div className="flex justify-between items-center mb-4">
