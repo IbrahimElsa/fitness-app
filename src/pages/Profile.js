@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
 import { useAuth } from "../AuthContext";
-import Modal from "../components/Modal";
+import DeleteAccModal from "../components/DeleteAccModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 
@@ -72,7 +72,7 @@ function Profile() {
             </div>
             <MobileNavbar />
             {modalOpen && (
-                <Modal title="Confirm Account Deletion" onClose={() => setModalOpen(false)}>
+                <DeleteAccModal title="Confirm Account Deletion" onClose={() => setModalOpen(false)}>
                     <div className="p-4 w-11/12">
                         {error && <p className="text-red-500">{error}</p>}
                         <p>Please enter your password to confirm deletion.</p>
@@ -98,7 +98,7 @@ function Profile() {
                             </button>
                         </div>
                     </div>
-                </Modal>
+                </DeleteAccModal>
             )}
         </div>
     );

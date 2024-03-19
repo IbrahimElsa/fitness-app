@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Modal from "../components/Modal";
+import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
 import exercisesData from "../components/Exercises.json";
+import MobileNavbar from "../components/MobileNavbar";
 
 function ActiveWorkout() {
     const [workoutExercises, setWorkoutExercises] = useState([]);
@@ -20,6 +21,7 @@ function ActiveWorkout() {
 
     return (
         <div className="active-workout-page">
+            
             {/* Your timer and workout note components here */}
             
             <button className="add-exercise-btn" onClick={() => setShowModal(true)}>
@@ -30,16 +32,16 @@ function ActiveWorkout() {
                 FINISH
             </button>
 
-            <Modal show={showModal} onClose={() => setShowModal(false)}>
-                {/* Modal content */}
-                <ul>
+            <ActiveWorkoutModal show={showModal} onClose={() => setShowModal(false)}>
+                <h3 className="modal-title">ADD EXERCISE</h3>
+                <ul className="modal-list">
                     {exercisesData.Exercises.map((exercise, index) => (
-                        <li key={index} onClick={() => handleAddExercise(exercise)}>
+                        <li key={index} onClick={() => handleAddExercise(exercise)} className="modal-list-item">
                             {exercise.Name}
                         </li>
                     ))}
                 </ul>
-            </Modal>
+            </ActiveWorkoutModal>
 
             <div className="selected-exercises">
                 {workoutExercises.map((exercise, index) => (
@@ -48,7 +50,9 @@ function ActiveWorkout() {
             </div>
 
             {/* Implement CANCEL WORKOUT logic */}
+            <MobileNavbar />
         </div>
+
     );
 }
 

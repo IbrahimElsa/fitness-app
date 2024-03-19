@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-const Modal = ({ title, children, onClose }) => {
+const DeleteAccModal = ({ title, children, onClose }) => {
 return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
         <div className="bg-white p-4 rounded shadow-lg">
@@ -14,4 +14,4 @@ return ReactDOM.createPortal(
     );
 };
 
-export default Modal;
+export default DeleteAccModal;
