@@ -39,10 +39,10 @@ function ActiveWorkout() {
             {/* Timer and workout note components should go here */}
 
             <div className="flex flex-col items-center pt-4 space-y-4">
-            <button className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
-        onClick={openModal}>
-    ADD EXERCISE
-</button>
+                <button className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+                    onClick={openModal}>
+                    ADD EXERCISE
+                </button>
                 <button 
                     className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none rounded text-white"
                     onClick={handleFinishWorkout}
@@ -59,14 +59,10 @@ function ActiveWorkout() {
             </div>
 
             {showModal && (
-                <ActiveWorkoutModal onClose={() => setShowModal(false)} title="Add Exercise">
+                <ActiveWorkoutModal show={showModal} onClose={() => setShowModal(false)} title="Add Exercise" className="z-50">
                     <ul>
                         {exercisesData.Exercises.map((exercise, index) => (
-                            <li 
-                                key={index} 
-                                onClick={() => handleAddExercise(exercise)} 
-                                className="cursor-pointer hover:bg-blue-200 p-2 rounded"
-                            >
+                            <li key={index} onClick={() => handleAddExercise(exercise)}>
                                 {exercise.Name}
                             </li>
                         ))}
