@@ -59,14 +59,25 @@ function ActiveWorkout() {
             </div>
 
             {showModal && (
-                <ActiveWorkoutModal show={showModal} onClose={() => setShowModal(false)} title="Add Exercise" className="z-50">
-                    <ul>
-                        {exercisesData.Exercises.map((exercise, index) => (
-                            <li key={index} onClick={() => handleAddExercise(exercise)}>
-                                {exercise.Name}
-                            </li>
-                        ))}
-                    </ul>
+                <ActiveWorkoutModal
+                    show={showModal}
+                    onClose={() => setShowModal(false)}
+                    title="Add Exercise"
+                    className="z-50"
+                >
+                    <div className="max-h-96 overflow-y-auto">
+                        <ul className="flex flex-col space-y-2">
+                            {exercisesData.Exercises.map((exercise, index) => (
+                                <li
+                                    key={index}
+                                    onClick={() => handleAddExercise(exercise)}
+                                    className="cursor-pointer bg-gray-200 text-gray-800 rounded-md p-4 hover:bg-gray-300 transition-colors duration-200"
+                                >
+                                    {exercise.Name}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 </ActiveWorkoutModal>
             )}
 
