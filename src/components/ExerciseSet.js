@@ -32,7 +32,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
         <div>PREVIOUS</div>
         <div>LBS</div>
         <div>REPS</div>
-        <div></div> {/* Empty column for checkbox alignment */}
+        <div></div>
       </div>
 
       {/* Initial Set */}
@@ -43,7 +43,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
           type="text"
           value={weight}
           onChange={handleWeightChange}
-          className="bg-gray-700 text-white rounded-md px-2 py-1"
+          className=" bg-gray-700 text-white rounded-md px-2 py-1"
         />
         <input
           type="text"
@@ -51,12 +51,14 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
           onChange={handleRepsChange}
           className="bg-gray-700 text-white rounded-md px-2 py-1"
         />
-        <input
-          type="checkbox"
-          checked={completed}
-          onChange={handleCompletedChange}
-          className="form-checkbox text-blue-500 mx-auto"
-        />
+        <div className="checkbox-container flex justify-end">
+          <input
+            type="checkbox"
+            checked={completed}
+            onChange={handleCompletedChange}
+            className="form-checkbox text-blue-500"
+          />
+        </div>
       </div>
 
       {/* Additional Sets */}
@@ -84,19 +86,22 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
             }}
             className="bg-gray-700 text-white rounded-md px-2 py-1"
           />
-          <input
-            type="checkbox"
-            checked={set.completed}
-            onChange={() => {
-              const updatedSets = [...additionalSets];
-              updatedSets[index].completed = !updatedSets[index].completed;
-              setAdditionalSets(updatedSets);
-            }}
-            className="form-checkbox text-blue-500 mx-auto"
-          />
+          <div className="checkbox-container flex justify-end ">
+            <input
+              type="checkbox"
+              checked={set.completed}
+              onChange={() => {
+                const updatedSets = [...additionalSets];
+                updatedSets[index].completed = !updatedSets[index].completed;
+                setAdditionalSets(updatedSets);
+              }}
+              className="form-checkbox text-blue-500"
+            />
+          </div>
         </div>
       ))}
 
+      {/* Add Set Button */}
       <div className="flex justify-center">
         <button
           className="py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white"
