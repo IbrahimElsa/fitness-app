@@ -66,6 +66,8 @@ function ActiveWorkout() {
           onClose={() => setShowModal(false)}
           title="Add Exercise"
           className="z-50"
+          exercisesData={exercisesData}
+          handleAddExercise={handleAddExercise}
         >
           <div className="max-h-96 overflow-y-auto">
             <ul className="flex flex-col space-y-2">
