@@ -53,7 +53,7 @@ function ActiveWorkout() {
   };
 
   return (
-    <div className="active-workout-page bg-gray-900 text-white min-h-screen">
+    <div className="active-workout-page bg-gray-200 text-white min-h-screen">
       <div className="flex flex-col items-center pt-4 space-y-4">
         <button
           className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"

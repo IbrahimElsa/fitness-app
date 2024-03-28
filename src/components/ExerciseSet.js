@@ -52,7 +52,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
   });
 
   return (
-    <div className="exercise-set bg-gray-800 text-white rounded-md p-4 mb-4" {...handlers}>
+    <div className="exercise-set bg-gray-400 rounded-md p-4 mb-4" {...handlers}>
       <div className="exercise-name text-lg font-semibold mb-4">{exerciseName}</div>
 
       {/* Column Titles */}
@@ -71,13 +71,13 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
           type="text"
           value={weight}
           onChange={handleWeightChange}
-          className="bg-gray-700 text-white rounded-md px-2 py-1 col-span-3"
+          className="  rounded-md px-2 py-1 col-span-3"
         />
         <input
           type="text"
           value={reps}
           onChange={handleRepsChange}
-          className="bg-gray-700 text-white rounded-md px-2 py-1 col-span-3"
+          className="  rounded-md px-2 py-1 col-span-3"
         />
         <div className="checkbox-container flex justify-end">
           <input
@@ -111,7 +111,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
                 updatedSets[index].weight = e.target.value;
                 setAdditionalSets(updatedSets);
               }}
-              className="bg-gray-700 text-white rounded-md px-2 py-1 col-span-3"
+              className="  rounded-md px-2 py-1 col-span-3"
             />
             <input
               type="text"
@@ -121,7 +121,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
                 updatedSets[index].reps = e.target.value;
                 setAdditionalSets(updatedSets);
               }}
-              className="bg-gray-700 text-white rounded-md px-2 py-1 col-span-3"
+              className="  rounded-md px-2 py-1 col-span-3"
             />
             <div className="checkbox-container flex justify-end">
               <input
@@ -142,7 +142,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
       {/* Add Set Button */}
       <div className="flex justify-center">
         <button
-          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white"
+          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded "
           onClick={handleAddSet}
         >
           Add Set
