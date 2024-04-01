@@ -4,15 +4,17 @@ import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
 import CancelModal from "../components/CancelModal";
 import exercisesData from "../components/Exercises.json";
 import MobileNavbar from "../components/MobileNavbar";
-import ExerciseSet from "../components/ExerciseSet"; 
+import ExerciseSet from "../components/ExerciseSet";
 import { db } from '../firebaseConfig';
 import { collection, addDoc } from "firebase/firestore";
+import { useTheme } from "../components/ThemeContext";
 
 function ActiveWorkout() {
   const [workoutExercises, setWorkoutExercises] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme(); // useTheme hook must be inside the component function
 
   const handleAddExercise = (exercise) => {
     const newExercise = {
@@ -27,11 +29,10 @@ function ActiveWorkout() {
     const userId = 'current-user-id';
 
     try {
-      
       await addDoc(collection(db, "workouts"), {
         userId: userId,
         exercises: workoutExercises,
-        timestamp: new Date(), // Store the date and time of workout completion
+        timestamp: new Date(),
       });
       console.log("Workout saved successfully!");
       navigate("/");
@@ -52,8 +53,11 @@ function ActiveWorkout() {
     setShowModal(true);
   };
 
+  // Use the theme to conditionally set class names
+  const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
+
   return (
-    <div className="active-workout-page bg-gray-200 text-white min-h-screen">
+    <div className={`active-workout-page min-h-screen ${containerClass}`}>
       <div className="flex flex-col items-center pt-4 space-y-4">
         <button
           className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
