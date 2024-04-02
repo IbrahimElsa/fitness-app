@@ -6,6 +6,7 @@ import { useAuth } from "../AuthContext";
 import DeleteAccModal from "../components/DeleteAccModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from "../components/ThemeContext"; // Import useTheme
 
 function Profile() {
     const navigate = useNavigate();
@@ -13,6 +14,7 @@ function Profile() {
     const [modalOpen, setModalOpen] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const { theme } = useTheme(); // Use theme from context
 
     const handleLogout = async () => {
         try {
@@ -39,20 +41,23 @@ function Profile() {
         }
     };
 
+    // Determine the background and text color based on the current theme
+    const backgroundColor = theme === 'light' ? 'bg-gray-200' : 'bg-gray-800';
+    const textColor = theme === 'light' ? 'text-gray-700' : 'text-white';
+
     return (
-        <div>
+        <div className={`${backgroundColor} min-h-screen`}>
             <Navbar />
-            <div className="flex flex-col h-screen bg-gray-200">
-                <div className="px-4 py-2 w-full">
+            <div className={`flex flex-col h-screen ${backgroundColor}`}>
+                <div className={`px-4 py-2 w-full ${textColor}`}>
                     <h1 className="text-3xl pt-12 pl-6">Profile</h1>
                     
                     <div className="flex flex-col justify-center items-center flex-1">
-                        {/* Logout button */}
                         <div className="w-full flex justify-center">
                             <FontAwesomeIcon 
                                 icon={faUserCircle} 
                                 size="9x" 
-                                className="mt-12 text-gray-700 pb-10"
+                                className={`mt-12 ${textColor} pb-10`}
                             />
                         </div>
                         <button
@@ -73,7 +78,7 @@ function Profile() {
             <MobileNavbar />
             {modalOpen && (
                 <DeleteAccModal title="Confirm Account Deletion" onClose={() => setModalOpen(false)}>
-                    <div className="p-4 w-11/12">
+                    <div className={`p-4 w-11/12 ${textColor}`}>
                         {error && <p className="text-red-500">{error}</p>}
                         <p>Please enter your password to confirm deletion.</p>
                         <input
