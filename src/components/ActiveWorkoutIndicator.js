@@ -8,22 +8,13 @@ const ActiveWorkoutIndicator = () => {
   if (!workoutActive) return null;
 
   return (
-    <div 
-      onClick={() => navigate('/active-workout')} 
-      style={{ 
-        cursor: 'pointer',
-        position: 'fixed',
-        top: '0',
-        width: '100%',
-        backgroundColor: 'red',
-        color: 'white',
-        textAlign: 'center',
-        padding: '10px'
-      }}>
-      Workout in Progress - Click to return
-    </div>
+    <button
+      onClick={() => navigate('/active-workout')}
+      className="fixed bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-full z-50 shadow-md"
+    >
+      <span className="material-icons">fitness_center</span>
+    </button>
   );
-  
 };
 
 export default ActiveWorkoutIndicator;

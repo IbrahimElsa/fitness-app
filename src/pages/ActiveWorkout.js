@@ -8,26 +8,24 @@ import ExerciseSet from "../components/ExerciseSet";
 import { db } from '../firebaseConfig';
 import { collection, addDoc } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
+import { useWorkout } from "../components/WorkoutContext";
 
 function ActiveWorkout() {
-  const [workoutExercises, setWorkoutExercises] = useState([]);
+  const { workoutExercises, workoutActive, startWorkout, finishWorkout, cancelWorkout } = useWorkout();
   const [showModal, setShowModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const navigate = useNavigate();
-  const { theme } = useTheme(); // useTheme hook must be inside the component function
+  const { theme } = useTheme();
 
   const handleAddExercise = (exercise) => {
-    const newExercise = {
-      ...exercise,
-      sets: [{ prevWeight: "", prevReps: "", weight: "", reps: "", completed: false }],
-    };
-    setWorkoutExercises((prevExercises) => [...prevExercises, newExercise]);
+    const newExercise = { ...exercise, sets: [{ prevWeight: "", prevReps: "", weight: "", reps: "", completed: false }] };
+    const updatedExercises = [...workoutExercises, newExercise];
+    startWorkout(updatedExercises);
     setShowModal(false);
   };
 
   const handleFinishWorkout = async () => {
     const userId = 'current-user-id';
-
     try {
       await addDoc(collection(db, "workouts"), {
         userId: userId,
@@ -35,6 +33,7 @@ function ActiveWorkout() {
         timestamp: new Date(),
       });
       console.log("Workout saved successfully!");
+      finishWorkout(); // Call the finishWorkout function from WorkoutContext
       navigate("/");
     } catch (error) {
       console.error("Error saving workout: ", error);
@@ -42,6 +41,7 @@ function ActiveWorkout() {
   };
 
   const handleCancelWorkout = () => {
+    cancelWorkout(); // Call the cancelWorkout function from WorkoutContext
     setShowCancelModal(true);
   };
 
@@ -53,7 +53,6 @@ function ActiveWorkout() {
     setShowModal(true);
   };
 
-  // Use the theme to conditionally set class names
   const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
 
   return (
