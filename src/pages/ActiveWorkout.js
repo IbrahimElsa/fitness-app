@@ -27,11 +27,22 @@ function ActiveWorkout() {
   const handleFinishWorkout = async () => {
     const userId = 'current-user-id';
     try {
-      await addDoc(collection(db, "workouts"), {
+      const workoutData = {
         userId: userId,
-        exercises: workoutExercises,
+        exercises: workoutExercises.map((exercise) => ({
+          ...exercise,
+          sets: exercise.sets.map((set) => ({
+            prevWeight: set.prevWeight,
+            prevReps: set.prevReps,
+            weight: set.weight,
+            reps: set.reps,
+            completed: set.completed,
+          })),
+        })),
         timestamp: new Date(),
-      });
+      };
+
+      await addDoc(collection(db, "workouts"), workoutData);
       console.log("Workout saved successfully!");
       finishWorkout(); // Call the finishWorkout function from WorkoutContext
       navigate("/");
