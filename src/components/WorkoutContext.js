@@ -25,8 +25,23 @@ export const WorkoutProvider = ({ children }) => {
     setWorkoutActive(false);
   };
 
+  const updateExerciseSets = (exerciseIndex, updatedSets) => {
+    const updatedExercises = [...workoutExercises];
+    updatedExercises[exerciseIndex].sets = updatedSets;
+    setWorkoutExercises(updatedExercises);
+  };
+
   return (
-    <WorkoutContext.Provider value={{ workoutExercises, workoutActive, startWorkout, finishWorkout, cancelWorkout }}>
+    <WorkoutContext.Provider
+      value={{
+        workoutExercises,
+        workoutActive,
+        startWorkout,
+        finishWorkout,
+        cancelWorkout,
+        updateExerciseSets,
+      }}
+    >
       {children}
     </WorkoutContext.Provider>
   );
