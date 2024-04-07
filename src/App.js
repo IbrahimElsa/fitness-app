@@ -2,8 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import { ThemeProvider } from './components/ThemeContext';
-import { WorkoutProvider } from './components/WorkoutContext'; // Import the WorkoutProvider
-import ActiveWorkoutIndicator from './components/ActiveWorkoutIndicator'; // Import the indicator component
+import { WorkoutProvider } from './components/WorkoutContext';
+import ActiveWorkoutIndicator from './components/ActiveWorkoutIndicator';
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
 import Home from './pages/Home';
@@ -18,9 +18,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <WorkoutProvider> {/* Wrap the routes with WorkoutProvider */}
+        <WorkoutProvider>
           <Router>
-            <ActiveWorkoutIndicator /> {/* Display the indicator across all pages */}
+            <ActiveWorkoutIndicator /> 
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
