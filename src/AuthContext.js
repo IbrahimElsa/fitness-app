@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { 
+import { getFirestore, doc, deleteDoc } from "firebase/firestore";
+import {
     getAuth, 
     onAuthStateChanged, 
     signOut,
@@ -12,9 +13,11 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+const firestore = getFirestore();
+const auth = getAuth();
+
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
-    const auth = getAuth();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -22,7 +25,7 @@ export const AuthProvider = ({ children }) => {
         });
 
         return unsubscribe;
-    }, [auth]);
+    }, []);
 
     const logout = () => {
         return signOut(auth);
@@ -30,19 +33,24 @@ export const AuthProvider = ({ children }) => {
 
     const deleteUser = async (password) => {
         if (!currentUser) {
-        throw new Error("No user is currently logged in.");
-    }
+            throw new Error("No user is currently logged in.");
+        }
 
-    const credential = EmailAuthProvider.credential(
-        currentUser.email,
-        password
-    );
+        const credential = EmailAuthProvider.credential(
+            currentUser.email,
+            password
+        );
 
-    try {
-        await reauthenticateWithCredential(currentUser, credential);
-        await firebaseDeleteUser(currentUser);
+        try {
+            await reauthenticateWithCredential(currentUser, credential);
+
+            // Delete the user's data from Firestore
+            const userDocRef = doc(firestore, "users", currentUser.uid);
+            await deleteDoc(userDocRef);
+
+            await firebaseDeleteUser(currentUser);
         } catch (error) {
-        throw error;
+            throw error;
         }
     };
 

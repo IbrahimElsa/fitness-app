@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../firebaseAuthServices';  // Import the register function
+import { register } from '../firebaseAuthServices'; 
 
 const RegisterPage = () => {
     const [email, setEmail] = useState('');
