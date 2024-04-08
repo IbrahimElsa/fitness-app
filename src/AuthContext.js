@@ -1,23 +1,22 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getFirestore, doc, deleteDoc } from "firebase/firestore";
 import {
-    getAuth, 
-    onAuthStateChanged, 
+    getAuth,
+    onAuthStateChanged,
     signOut,
     reauthenticateWithCredential,
     EmailAuthProvider,
     deleteUser as firebaseDeleteUser
 } from "firebase/auth";
+import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-const firestore = getFirestore();
-const auth = getAuth();
-
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
+    const auth = getAuth();
+    const db = getFirestore();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -25,7 +24,7 @@ export const AuthProvider = ({ children }) => {
         });
 
         return unsubscribe;
-    }, []);
+    }, [auth]);
 
     const logout = () => {
         return signOut(auth);
@@ -42,12 +41,18 @@ export const AuthProvider = ({ children }) => {
         );
 
         try {
+            // Re-authenticate the user
             await reauthenticateWithCredential(currentUser, credential);
 
-            // Delete the user's data from Firestore
-            const userDocRef = doc(firestore, "users", currentUser.uid);
+            // Delete the user's document from the "users" collection
+            const userDocRef = doc(db, "users", currentUser.uid);
             await deleteDoc(userDocRef);
 
+            // Delete the user's document from the "workouts" collection
+            const workoutsDocRef = doc(db, "workouts", currentUser.uid);
+            await deleteDoc(workoutsDocRef);
+
+            // Finally, delete the user's authentication data
             await firebaseDeleteUser(currentUser);
         } catch (error) {
             throw error;
