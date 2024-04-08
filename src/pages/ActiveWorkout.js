@@ -25,7 +25,7 @@ function ActiveWorkout() {
   };
 
   const handleFinishWorkout = async () => {
-    const userId = 'current-user-id';
+    const userId = 'current-user-id';  // This should be dynamically obtained based on the logged-in user
     try {
       const workoutData = {
         userId: userId,
@@ -41,10 +41,10 @@ function ActiveWorkout() {
         })),
         timestamp: new Date(),
       };
-
+  
       await addDoc(collection(db, "workouts"), workoutData);
       console.log("Workout saved successfully!");
-      finishWorkout(); // Call the finishWorkout function from WorkoutContext
+      finishWorkout();
       navigate("/");
     } catch (error) {
       console.error("Error saving workout: ", error);
