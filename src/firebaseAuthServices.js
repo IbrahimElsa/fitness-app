@@ -1,8 +1,8 @@
-import { 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword 
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword
 } from "firebase/auth";
-import { doc, setDoc, getFirestore } from "firebase/firestore";
+import { doc, setDoc, getFirestore, collection } from "firebase/firestore";
 import { auth } from './firebaseConfig';
 
 export const login = (email, password) => {
@@ -19,14 +19,14 @@ export const register = async (email, password) => {
 
             const userDocRef = doc(db, "users", user.uid);
             await setDoc(userDocRef, {
-                email: user.email,
                 createdAt: new Date(),
             });
 
-            // Create a 'workouts' collection under the user
-            const workoutsCollectionRef = doc(db, `users/${user.uid}/workouts`, 'initial');
-            await setDoc(workoutsCollectionRef, {
-                // Initial data or structure for the workouts collection
+            // Create a 'workouts' subcollection under the user document
+            const workoutsCollectionRef = collection(userDocRef, 'workouts');
+            const initialWorkoutDocRef = doc(workoutsCollectionRef);
+            await setDoc(initialWorkoutDocRef, {
+                // Initial data or structure for the workouts subcollection
                 initialized: true,
                 createdAt: new Date(),
             });
@@ -39,4 +39,3 @@ export const register = async (email, password) => {
         throw error;
     }
 };
-

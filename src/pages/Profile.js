@@ -6,15 +6,28 @@ import { useAuth } from "../AuthContext";
 import DeleteAccModal from "../components/DeleteAccModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from "../components/ThemeContext"; // Import useTheme
+import { useTheme } from "../components/ThemeContext";
+import { 
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  deleteUser as firebaseDeleteUser
+} from "firebase/auth";
+import { 
+  getFirestore, 
+  doc, 
+  deleteDoc, 
+  collection, 
+  getDocs 
+} from 'firebase/firestore';
 
 function Profile() {
     const navigate = useNavigate();
-    const { logout, deleteUser } = useAuth();
+    const { currentUser, logout } = useAuth(); // Use currentUser and logout from AuthContext
     const [modalOpen, setModalOpen] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const { theme } = useTheme(); // Use theme from context
+    const db = getFirestore();
 
     const handleLogout = async () => {
         try {
@@ -26,19 +39,54 @@ function Profile() {
         }
     };
 
+    const deleteUserAndData = async (password) => {
+        if (!currentUser) {
+            setError("No user is currently logged in.");
+            return;
+        }
+
+        const credential = EmailAuthProvider.credential(
+            currentUser.email,
+            password
+        );
+
+        try {
+            // Re-authenticate the user
+            await reauthenticateWithCredential(currentUser, credential);
+
+            // Fetch all workout documents in the "workouts" subcollection for the user
+            const workoutsCollectionRef = collection(db, `users/${currentUser.uid}/workouts`);
+            const workoutDocs = await getDocs(workoutsCollectionRef);
+            
+            // Delete each workout document
+            for (const docSnapshot of workoutDocs.docs) {
+                await deleteDoc(docSnapshot.ref);
+            }
+
+            // Delete the user's document from the "workouts" collection
+            const workoutDocRef = doc(db, "workouts", currentUser.uid);
+            await deleteDoc(workoutDocRef);
+
+            // Delete the user's document from the "users" collection
+            const userDocRef = doc(db, "users", currentUser.uid);
+            await deleteDoc(userDocRef);
+
+            // Finally, delete the user's authentication data
+            await firebaseDeleteUser(currentUser);
+            
+            navigate('/');
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
     const handleDeleteAccount = async () => {
         if (!password) {
             setError('Please enter your password.');
             return;
         }
-        try {
-            await deleteUser(password);
-            console.log('Account deleted');
-            navigate('/');
-        } catch (error) {
-            console.error('Account deletion failed', error);
-            setError('Failed to delete account. Please check your password and try again.');
-        }
+        setError('');
+        await deleteUserAndData(password);
     };
 
     // Determine the background and text color based on the current theme
@@ -80,7 +128,7 @@ function Profile() {
                 <DeleteAccModal title="Confirm Account Deletion" onClose={() => setModalOpen(false)}>
                     <div className={`p-4 w-11/12 ${textColor}`}>
                         {error && <p className="text-red-500">{error}</p>}
-                        <p>Please enter your password to confirm deletion.</p>
+                        <p>Please enter your password to confirm deletion:</p>
                         <input
                             type="password"
                             placeholder="Password"
