@@ -25,7 +25,7 @@ function ActiveWorkout() {
   };
 
   const handleFinishWorkout = async () => {
-    const userId = 'current-user-id';  // This should be dynamically obtained based on the logged-in user
+    const userId = 'current-user-id';
     try {
       const workoutData = {
         userId: userId,

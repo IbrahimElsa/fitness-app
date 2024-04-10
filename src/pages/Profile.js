@@ -7,26 +7,26 @@ import DeleteAccModal from "../components/DeleteAccModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
-import { 
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  deleteUser as firebaseDeleteUser
+import {
+    reauthenticateWithCredential,
+    EmailAuthProvider,
+    deleteUser as firebaseDeleteUser
 } from "firebase/auth";
-import { 
-  getFirestore, 
-  doc, 
-  deleteDoc, 
-  collection, 
-  getDocs 
+import {
+    getFirestore,
+    doc,
+    deleteDoc,
+    collection,
+    getDocs
 } from 'firebase/firestore';
 
 function Profile() {
     const navigate = useNavigate();
-    const { currentUser, logout } = useAuth(); // Use currentUser and logout from AuthContext
+    const { currentUser, logout } = useAuth();
     const [modalOpen, setModalOpen] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { theme } = useTheme(); // Use theme from context
+    const { theme } = useTheme();
     const db = getFirestore();
 
     const handleLogout = async () => {
@@ -45,10 +45,7 @@ function Profile() {
             return;
         }
 
-        const credential = EmailAuthProvider.credential(
-            currentUser.email,
-            password
-        );
+        const credential = EmailAuthProvider.credential(currentUser.email, password);
 
         try {
             // Re-authenticate the user
@@ -62,10 +59,6 @@ function Profile() {
             for (const docSnapshot of workoutDocs.docs) {
                 await deleteDoc(docSnapshot.ref);
             }
-
-            // Delete the user's document from the "workouts" collection
-            const workoutDocRef = doc(db, "workouts", currentUser.uid);
-            await deleteDoc(workoutDocRef);
 
             // Delete the user's document from the "users" collection
             const userDocRef = doc(db, "users", currentUser.uid);
@@ -89,7 +82,6 @@ function Profile() {
         await deleteUserAndData(password);
     };
 
-    // Determine the background and text color based on the current theme
     const backgroundColor = theme === 'light' ? 'bg-gray-200' : 'bg-gray-800';
     const textColor = theme === 'light' ? 'text-gray-700' : 'text-white';
 
