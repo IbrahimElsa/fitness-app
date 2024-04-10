@@ -6,16 +6,18 @@ import exercisesData from "../components/Exercises.json";
 import MobileNavbar from "../components/MobileNavbar";
 import ExerciseSet from "../components/ExerciseSet";
 import { db } from '../firebaseConfig';
-import { collection, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs } from "firebase/firestore";  // Removed addDoc from here
 import { useTheme } from "../components/ThemeContext";
 import { useWorkout } from "../components/WorkoutContext";
+import { useAuth } from "../AuthContext";
 
 function ActiveWorkout() {
-  const { workoutExercises, workoutActive, startWorkout, finishWorkout, cancelWorkout } = useWorkout();
+  const { workoutExercises, startWorkout, finishWorkout, cancelWorkout } = useWorkout();
   const [showModal, setShowModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { currentUser } = useAuth();  // Use the useAuth hook to get the current user
 
   const handleAddExercise = (exercise) => {
     const newExercise = { ...exercise, sets: [{ prevWeight: "", prevReps: "", weight: "", reps: "", completed: false }] };
@@ -25,13 +27,23 @@ function ActiveWorkout() {
   };
 
   const handleFinishWorkout = async () => {
-    const userId = 'current-user-id';
+    if (!currentUser) {
+      console.error("No user logged in");
+      return;
+    }
+    
+    const userId = currentUser.uid;
+    const workoutsCollectionRef = collection(db, `users/${userId}/workouts`);
+
     try {
+      const workoutsSnapshot = await getDocs(workoutsCollectionRef);
+      const workoutNumber = workoutsSnapshot.size + 1;  // Determine the next workout number
+      const workoutDocName = `workout ${workoutNumber}`;  // Create workout document name (e.g., "workout 1")
+
       const workoutData = {
-        userId: userId,
-        exercises: workoutExercises.map((exercise) => ({
+        exercises: workoutExercises.map(exercise => ({
           ...exercise,
-          sets: exercise.sets.map((set) => ({
+          sets: exercise.sets.map(set => ({
             prevWeight: set.prevWeight,
             prevReps: set.prevReps,
             weight: set.weight,
@@ -41,8 +53,8 @@ function ActiveWorkout() {
         })),
         timestamp: new Date(),
       };
-  
-      await addDoc(collection(db, "workouts"), workoutData);
+
+      await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
       console.log("Workout saved successfully!");
       finishWorkout();
       navigate("/");
@@ -52,7 +64,7 @@ function ActiveWorkout() {
   };
 
   const handleCancelWorkout = () => {
-    cancelWorkout(); // Call the cancelWorkout function from WorkoutContext
+    cancelWorkout();
     setShowCancelModal(true);
   };
 

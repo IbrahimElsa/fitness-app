@@ -6,7 +6,6 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
 
-      // Allow access to the "workouts" subcollection
       match /workouts/{workoutId} {
         allow read, delete: if request.auth != null && request.auth.uid == userId;
       }
