@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 
-const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
+const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIndex, updateSets }) => {
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [completed, setCompleted] = useState(false);
   const [additionalSets, setAdditionalSets] = useState([]);
   const [swipeState, setSwipeState] = useState({});
 
-  const handleWeightChange = (e) => setWeight(e.target.value);
-  const handleRepsChange = (e) => setReps(e.target.value);
+  const handleWeightChange = (e) => {
+    setWeight(e.target.value);
+    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight: e.target.value, reps, completed }, ...additionalSets]);
+  };
+
+  const handleRepsChange = (e) => {
+    setReps(e.target.value);
+    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight, reps: e.target.value, completed }, ...additionalSets]);
+  };
+
   const handleCompletedChange = () => setCompleted(!completed);
 
   const handleAddSet = () => {
@@ -22,13 +30,16 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
       reps: '',
       completed: false
     };
-    setAdditionalSets([...additionalSets, newSet]);
+    const updatedSets = [...additionalSets, newSet];
+    setAdditionalSets(updatedSets);
+    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight, reps, completed }, ...updatedSets]);
   };
 
   const handleDeleteSet = (setId) => {
     const updatedSets = additionalSets.filter(set => set.id !== setId);
     setAdditionalSets(updatedSets);
     setSwipeState(prev => ({ ...prev, [setId]: undefined }));
+    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight, reps, completed }, ...updatedSets]);
   };
 
   const handlers = useSwipeable({
@@ -50,6 +61,7 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
     },
     trackMouse: true,
   });
+
 
   return (
     <div className="exercise-set bg-gray-400 rounded-md p-4 mb-4" {...handlers}>

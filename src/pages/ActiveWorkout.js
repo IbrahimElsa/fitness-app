@@ -6,18 +6,18 @@ import exercisesData from "../components/Exercises.json";
 import MobileNavbar from "../components/MobileNavbar";
 import ExerciseSet from "../components/ExerciseSet";
 import { db } from '../firebaseConfig';
-import { collection, doc, setDoc, getDocs } from "firebase/firestore";  // Removed addDoc from here
+import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
 import { useWorkout } from "../components/WorkoutContext";
 import { useAuth } from "../AuthContext";
 
 function ActiveWorkout() {
-  const { workoutExercises, startWorkout, finishWorkout, cancelWorkout } = useWorkout();
+  const { workoutExercises, startWorkout, finishWorkout, cancelWorkout, updateExerciseSets } = useWorkout();
   const [showModal, setShowModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { currentUser } = useAuth();  // Use the useAuth hook to get the current user
+  const { currentUser } = useAuth();
 
   const handleAddExercise = (exercise) => {
     const newExercise = { ...exercise, sets: [{ prevWeight: "", prevReps: "", weight: "", reps: "", completed: false }] };
@@ -31,29 +31,31 @@ function ActiveWorkout() {
       console.error("No user logged in");
       return;
     }
-    
+  
     const userId = currentUser.uid;
     const workoutsCollectionRef = collection(db, `users/${userId}/workouts`);
-
+  
     try {
       const workoutsSnapshot = await getDocs(workoutsCollectionRef);
-      const workoutNumber = workoutsSnapshot.size + 1;  // Determine the next workout number
-      const workoutDocName = `workout ${workoutNumber}`;  // Create workout document name (e.g., "workout 1")
-
+      const workoutNumber = workoutsSnapshot.size + 1;
+      const workoutDocName = `workout ${workoutNumber}`;
+  
       const workoutData = {
         exercises: workoutExercises.map(exercise => ({
           ...exercise,
-          sets: exercise.sets.map(set => ({
+          sets: exercise.sets.map((set, setIndex) => ({
             prevWeight: set.prevWeight,
             prevReps: set.prevReps,
             weight: set.weight,
             reps: set.reps,
             completed: set.completed,
+            setNumber: setIndex + 1,
           })),
         })),
         timestamp: new Date(),
       };
-
+      
+  
       await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
       console.log("Workout saved successfully!");
       finishWorkout();
@@ -119,6 +121,8 @@ function ActiveWorkout() {
                 prevWeight={set.prevWeight}
                 prevReps={set.prevReps}
                 setNumber={setIndex + 1}
+                exerciseIndex={exerciseIndex}
+                updateSets={updateExerciseSets}
               />
             ))}
           </div>

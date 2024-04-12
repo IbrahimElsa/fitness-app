@@ -29,7 +29,7 @@ export const WorkoutProvider = ({ children }) => {
     const updatedExercises = [...workoutExercises];
     updatedExercises[exerciseIndex].sets = updatedSets;
     setWorkoutExercises(updatedExercises);
-  };
+  };  
 
   return (
     <WorkoutContext.Provider
