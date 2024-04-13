@@ -41,21 +41,25 @@ function ActiveWorkout() {
       const workoutDocName = `workout ${workoutNumber}`;
   
       const workoutData = {
-        exercises: workoutExercises.map(exercise => ({
-          ...exercise,
-          sets: exercise.sets.map((set, setIndex) => ({
-            prevWeight: set.prevWeight,
-            prevReps: set.prevReps,
-            weight: set.weight,
-            reps: set.reps,
-            completed: set.completed,
-            setNumber: setIndex + 1,
-          })),
-        })),
+        exercises: workoutExercises.map(exercise => {
+          console.log("Exercise Data Check:", exercise); // Log the entire exercise data
+          return {
+            name: exercise.Name,
+            sets: exercise.sets.map(set => {
+              console.log("Set Data Check:", set); // Log each set data
+              return {
+                weight: set.weight || '0 lbs',  // Default weight if undefined
+                reps: set.reps || '0',          // Default reps if undefined
+                completed: set.completed !== undefined ? set.completed : false, // Ensure boolean value
+                setNumber: set.setNumber,
+              }
+            }),
+          }
+        }),
         timestamp: new Date(),
       };
-      
   
+      console.log("Final Workout Data to save:", workoutData); // Log final data to be saved
       await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
       console.log("Workout saved successfully!");
       finishWorkout();
@@ -64,6 +68,9 @@ function ActiveWorkout() {
       console.error("Error saving workout: ", error);
     }
   };
+  
+  
+  
 
   const handleCancelWorkout = () => {
     cancelWorkout();
