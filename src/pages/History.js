@@ -3,7 +3,7 @@ import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faScrewdriverWrench } from "@fortawesome/free-solid-svg-icons";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../components/ThemeContext";
 
 function HistoryPage() {
 const { theme } = useTheme();

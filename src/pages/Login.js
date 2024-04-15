@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../firebaseAuthServices'; 
 import { useAuth } from '../AuthContext';
+import MobileNavbar from '../components/MobileNavbar';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -97,6 +98,7 @@ const LoginPage = () => {
         </div>
                 </div>
             </div>
+            <MobileNavbar />
         </div>
     );
 };
