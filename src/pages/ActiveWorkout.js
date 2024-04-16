@@ -32,6 +32,11 @@ function ActiveWorkout() {
       return;
     }
   
+    if (workoutExercises.length === 0) {
+      alert("No exercises added to the workout.");
+      return;
+    }
+  
     const userId = currentUser.uid;
     const workoutsCollectionRef = collection(db, `users/${userId}/workouts`);
   
@@ -40,28 +45,35 @@ function ActiveWorkout() {
       const workoutNumber = workoutsSnapshot.size + 1;
       const workoutDocName = `workout ${workoutNumber}`;
   
+      // Initialize additionalSets
+      const additionalSets = {};
+  
       const workoutData = {
-        exercises: workoutExercises.map(exercise => {
-          console.log("Exercise Data Check:", exercise); // Log the entire exercise data
-          return {
-            name: exercise.Name,
-            sets: exercise.sets.map(set => {
-              console.log("Set Data Check:", set); // Log each set data
-              return {
-                weight: set.weight || '0 lbs',  // Default weight if undefined
-                reps: set.reps || '0',          // Default reps if undefined
-                completed: set.completed !== undefined ? set.completed : false, // Ensure boolean value
-                setNumber: set.setNumber,
+        exercises: workoutExercises.map(exercise => ({
+          name: exercise.Name || "Unnamed Exercise",
+          sets: exercise.sets.flatMap((set, index) => {
+            const baseSets = [
+              {
+                weight: set.weight || '0 lbs',
+                reps: set.reps || '0',
+                completed: set.completed !== undefined ? set.completed : false,
+                setNumber: index + 1,
               }
-            }),
-          }
-        }),
+            ];
+  
+            const additionalExerciseSets = additionalSets[index] || [];
+            return baseSets.concat(additionalExerciseSets.map((additionalSet, additionalIndex) => ({
+              weight: additionalSet.weight || '0 lbs',
+              reps: additionalSet.reps || '0',
+              completed: additionalSet.completed !== undefined ? additionalSet.completed : false,
+              setNumber: index + 1 + additionalIndex + 1,
+            })));
+          })
+        })),
         timestamp: new Date(),
       };
   
-      console.log("Final Workout Data to save:", workoutData); // Log final data to be saved
       await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
-      console.log("Workout saved successfully!");
       finishWorkout();
       navigate("/");
     } catch (error) {
@@ -69,9 +81,6 @@ function ActiveWorkout() {
     }
   };
   
-  
-  
-
   const handleCancelWorkout = () => {
     cancelWorkout();
     setShowCancelModal(true);

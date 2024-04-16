@@ -11,8 +11,8 @@ const { theme } = useTheme();
 const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
 
     return (
-        <div className={`history-page min-h-screen ${containerClass}`}>
-            <div className="flex flex-col items-center justify-center">
+        <div className={`history-page ${containerClass}`}>
+            <div className="flex flex-col items-center justify-center min-h-screen">
                 <Navbar />
                     <FontAwesomeIcon icon={faScrewdriverWrench} size="4x"/>
                     <h1 className="text-3xl pt-5">History Page WIP</h1>

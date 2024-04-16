@@ -11,7 +11,7 @@ function CoachPage() {
     const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
 
 return (
-    <div className={`coach-page min-h-screen ${containerClass}`}>
+    <div className={`coach-page ${containerClass}`}>
         <div className={'coach-page flex flex-col items-center justify-center min-h-screen'}>
             <Navbar />
                 <FontAwesomeIcon icon={faScrewdriverWrench} size="4x"/>
