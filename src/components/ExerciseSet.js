@@ -8,8 +8,30 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
   const [additionalSets, setAdditionalSets] = useState([]);
   const [swipeState, setSwipeState] = useState({});
 
-  const handleWeightChange = (e) => setWeight(e.target.value);
-  const handleRepsChange = (e) => setReps(e.target.value);
+  const handleWeightChange = (e, index) => {
+    if (index === undefined) {
+      // Updating the main set
+      setWeight(e.target.value);
+    } else {
+      // Updating additional sets
+      const updatedSets = [...additionalSets];
+      updatedSets[index].weight = e.target.value;
+      setAdditionalSets(updatedSets);
+    }
+  };
+
+  const handleRepsChange = (e, index) => {
+    if (index === undefined) {
+      // Updating the main set
+      setReps(e.target.value);
+    } else {
+      // Updating additional sets
+      const updatedSets = [...additionalSets];
+      updatedSets[index].reps = e.target.value;
+      setAdditionalSets(updatedSets);
+    }
+  };
+  
   const handleCompletedChange = () => setCompleted(!completed);
 
   const handleAddSet = () => {
