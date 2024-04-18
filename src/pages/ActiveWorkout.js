@@ -45,34 +45,20 @@ function ActiveWorkout() {
       const workoutNumber = workoutsSnapshot.size + 1;
       const workoutDocName = `workout ${workoutNumber}`;
   
-      // Initialize additionalSets
-      const additionalSets = {};
-  
       const workoutData = {
         exercises: workoutExercises.map(exercise => ({
           name: exercise.Name || "Unnamed Exercise",
-          sets: exercise.sets.flatMap((set, index) => {
-            const baseSets = [
-              {
-                weight: set.weight || '0 lbs',
-                reps: set.reps || '0',
-                completed: set.completed !== undefined ? set.completed : false,
-                setNumber: index + 1,
-              }
-            ];
-  
-            const additionalExerciseSets = additionalSets[index] || [];
-            return baseSets.concat(additionalExerciseSets.map((additionalSet, additionalIndex) => ({
-              weight: additionalSet.weight || '0 lbs',
-              reps: additionalSet.reps || '0',
-              completed: additionalSet.completed !== undefined ? additionalSet.completed : false,
-              setNumber: index + 1 + additionalIndex + 1,
-            })));
-          })
+          sets: (exercise.sets.concat(exercise.additionalSets || [])).map((set, index) => ({
+            weight: set.weight || '0 lbs',
+            reps: set.reps || '0',
+            completed: set.completed !== undefined ? set.completed : false,
+            setNumber: index + 1,
+          }))
         })),
         timestamp: new Date(),
       };
-  
+      
+      
       await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
       finishWorkout();
       navigate("/");
@@ -80,6 +66,7 @@ function ActiveWorkout() {
       console.error("Error saving workout: ", error);
     }
   };
+  
   
   const handleCancelWorkout = () => {
     cancelWorkout();

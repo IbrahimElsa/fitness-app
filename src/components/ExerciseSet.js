@@ -10,27 +10,24 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber }) => {
 
   const handleWeightChange = (e, index) => {
     if (index === undefined) {
-      // Updating the main set
       setWeight(e.target.value);
     } else {
-      // Updating additional sets
       const updatedSets = [...additionalSets];
       updatedSets[index].weight = e.target.value;
       setAdditionalSets(updatedSets);
     }
   };
-
+  
   const handleRepsChange = (e, index) => {
     if (index === undefined) {
-      // Updating the main set
       setReps(e.target.value);
     } else {
-      // Updating additional sets
       const updatedSets = [...additionalSets];
       updatedSets[index].reps = e.target.value;
       setAdditionalSets(updatedSets);
     }
   };
+  
   
   const handleCompletedChange = () => setCompleted(!completed);
 
