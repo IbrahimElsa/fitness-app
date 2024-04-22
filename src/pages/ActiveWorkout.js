@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
 import CancelModal from "../components/CancelModal";
 import exercisesData from "../components/Exercises.json";
@@ -18,9 +18,30 @@ function ActiveWorkout() {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { currentUser } = useAuth();
+  const [timer, setTimer] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive) {
+      interval = setInterval(() => {
+        setTimer(timer => timer + 1);
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isActive]);
+
+  useEffect(() => {
+    if (location.state?.startTimer) {
+      setIsActive(true);  // Start the timer if navigation state requests it
+    }
+  }, [location]);
 
   const handleAddExercise = (exercise) => {
-    const newExercise = { ...exercise, sets: [{ prevWeight: "", prevReps: "", weight: "", reps: "", completed: false }] };
+    const newExercise = { ...exercise, sets: [{ weight: "", reps: "", completed: false }] };
     const updatedExercises = [...workoutExercises, newExercise];
     startWorkout(updatedExercises);
     setShowModal(false);
@@ -31,45 +52,41 @@ function ActiveWorkout() {
       console.error("No user logged in");
       return;
     }
-  
-    if (workoutExercises.length === 0) {
-      alert("No exercises added to the workout.");
-      return;
-    }
-  
+
+    setIsActive(false); // Stop the timer
     const userId = currentUser.uid;
     const workoutsCollectionRef = collection(db, `users/${userId}/workouts`);
-  
+
     try {
       const workoutsSnapshot = await getDocs(workoutsCollectionRef);
       const workoutNumber = workoutsSnapshot.size + 1;
       const workoutDocName = `workout ${workoutNumber}`;
-  
+
       const workoutData = {
         exercises: workoutExercises.map(exercise => ({
-          name: exercise.Name || "Unnamed Exercise",
-          sets: (exercise.sets.concat(exercise.additionalSets || [])).map((set, index) => ({
-            weight: set.weight || '0 lbs',
-            reps: set.reps || '0',
-            completed: set.completed !== undefined ? set.completed : false,
-            setNumber: index + 1,
-          }))
+          ...exercise,
+          sets: exercise.sets.map((set, setIndex) => ({
+            weight: set.weight,
+            reps: set.reps,
+            completed: set.completed,
+            setNumber: setIndex + 1,
+          })),
         })),
         timestamp: new Date(),
       };
-      
-      
+
       await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
+      console.log("Workout saved successfully!");
       finishWorkout();
       navigate("/");
     } catch (error) {
       console.error("Error saving workout: ", error);
     }
   };
-  
-  
+
   const handleCancelWorkout = () => {
     cancelWorkout();
+    setIsActive(false); // Stop the timer
     setShowCancelModal(true);
   };
 
@@ -86,6 +103,9 @@ function ActiveWorkout() {
   return (
     <div className={`active-workout-page min-h-screen ${containerClass}`}>
       <div className="flex flex-col items-center pt-4 space-y-4">
+        <div className="timer-display">
+          Timer: {Math.floor(timer / 3600)} : {Math.floor((timer % 3600) / 60)} : {timer % 60}
+        </div>
         <button
           className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
           onClick={openModal}
@@ -121,13 +141,11 @@ function ActiveWorkout() {
               <ExerciseSet
                 key={`${exerciseIndex}-${setIndex}`}
                 exerciseName={exercise.Name}
-                prevWeight={set.prevWeight}
-                prevReps={set.prevReps}
                 setNumber={setIndex + 1}
                 exerciseIndex={exerciseIndex}
                 updateSets={updateExerciseSets}
-              />
-            ))}
+              />)
+            )}
           </div>
         ))}
       </div>

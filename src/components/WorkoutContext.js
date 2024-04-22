@@ -25,11 +25,21 @@ export const WorkoutProvider = ({ children }) => {
     setWorkoutActive(false);
   };
 
-  const updateExerciseSets = (exerciseIndex, updatedSets) => {
+  const updateExerciseSets = (exerciseIndex, setIndex, setDetails, isAdditional = false) => {
     const updatedExercises = [...workoutExercises];
-    updatedExercises[exerciseIndex].sets = updatedSets;
+    if (isAdditional) {
+      // Check if additionalSets array exists, if not, create it
+      if (!updatedExercises[exerciseIndex].additionalSets) {
+        updatedExercises[exerciseIndex].additionalSets = [];
+      }
+      // Update or add the set in the additionalSets array
+      updatedExercises[exerciseIndex].additionalSets[setIndex] = setDetails;
+    } else {
+      // Update the set in the main sets array
+      updatedExercises[exerciseIndex].sets[setIndex] = setDetails;
+    }
     setWorkoutExercises(updatedExercises);
-  };  
+  };
 
   return (
     <WorkoutContext.Provider

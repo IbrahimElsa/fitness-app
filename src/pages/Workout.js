@@ -9,7 +9,7 @@ function WorkoutPage() {
     const { theme } = useTheme();
 
     const startWorkout = () => {
-        navigate('/active-workout');
+        navigate('/active-workout', { state: { startTimer: true } });
     };
 
     return (
