@@ -49,8 +49,8 @@ function ActiveWorkout() {
 
   const handleFinishWorkout = async () => {
     if (!currentUser) {
-      console.error("No user logged in");
-      return;
+        console.error("No user logged in");
+        return;
     }
 
     setIsActive(false); // Stop the timer
@@ -58,31 +58,33 @@ function ActiveWorkout() {
     const workoutsCollectionRef = collection(db, `users/${userId}/workouts`);
 
     try {
-      const workoutsSnapshot = await getDocs(workoutsCollectionRef);
-      const workoutNumber = workoutsSnapshot.size + 1;
-      const workoutDocName = `workout ${workoutNumber}`;
+        const workoutsSnapshot = await getDocs(workoutsCollectionRef);
+        const workoutNumber = workoutsSnapshot.size + 1;
+        const workoutDocName = `workout ${workoutNumber}`;
+        const workoutDuration = `${Math.floor(timer / 3600)} : ${Math.floor((timer % 3600) / 60)} : ${timer % 60}`;
+        const workoutData = {
+            exercises: workoutExercises.map(exercise => ({
+                ...exercise,
+                sets: exercise.sets.map((set, setIndex) => ({
+                    weight: set.weight,
+                    reps: set.reps,
+                    completed: set.completed,
+                    setNumber: setIndex + 1,
+                })),
+            })),
+            duration: workoutDuration, 
+            timestamp: new Date(),
+        };
 
-      const workoutData = {
-        exercises: workoutExercises.map(exercise => ({
-          ...exercise,
-          sets: exercise.sets.map((set, setIndex) => ({
-            weight: set.weight,
-            reps: set.reps,
-            completed: set.completed,
-            setNumber: setIndex + 1,
-          })),
-        })),
-        timestamp: new Date(),
-      };
-
-      await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
-      console.log("Workout saved successfully!");
-      finishWorkout();
-      navigate("/");
+        await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
+        console.log("Workout saved successfully!");
+        finishWorkout();
+        navigate("/");
     } catch (error) {
-      console.error("Error saving workout: ", error);
+        console.error("Error saving workout: ", error);
     }
-  };
+};
+
 
   const handleCancelWorkout = () => {
     cancelWorkout();
