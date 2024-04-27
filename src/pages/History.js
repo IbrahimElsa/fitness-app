@@ -15,7 +15,7 @@ const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <Navbar />
                     <FontAwesomeIcon icon={faScrewdriverWrench} size="4x"/>
-                    <h1 className="text-3xl pt-5">History Page WIP</h1>
+                    <h1 className="text-3xl pt-5 font-bold">History Page WIP</h1>
                 <MobileNavbar />
             </div>
         </div>

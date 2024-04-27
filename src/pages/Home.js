@@ -32,7 +32,7 @@ function Home() {
       <Navbar />
       <div className="flex flex-col h-screen">
         <div className="px-4 py-2 flex justify-between items-center w-full">
-          <h1 className="text-3xl pt-12 pl-6">Home</h1>
+          <h1 className="text-3xl pt-12 pl-6 font-bold">Home</h1>
           {currentUser ? (
             <div className="relative">
               <FontAwesomeIcon icon={faUserCircle} size="2x" className="cursor-pointer" onClick={handleToggleDropdown} />
