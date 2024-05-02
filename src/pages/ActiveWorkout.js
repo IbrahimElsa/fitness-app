@@ -36,7 +36,7 @@ function ActiveWorkout() {
 
   useEffect(() => {
     if (location.state?.startTimer) {
-      setIsActive(true);  // Start the timer if navigation state requests it
+      setIsActive(true);
     }
   }, [location]);
 
@@ -53,7 +53,7 @@ function ActiveWorkout() {
       return;
     }
   
-    setIsActive(false); // Stop the timer
+    setIsActive(false);
     const userId = currentUser.uid;
     const workoutsCollectionRef = collection(db, `users/${userId}/workouts`);
   

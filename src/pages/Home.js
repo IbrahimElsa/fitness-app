@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
@@ -7,25 +7,46 @@ import { useAuth } from "../AuthContext";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
+import { format } from 'date-fns';
 
 function Home() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { toggleTheme, theme, themeCss } = useTheme();
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const calculateSundays = () => {
+      const sundays = [];
+      let today = new Date();
+      today.setDate(today.getDate() + (7 - today.getDay())); 
+      for (let i = 0; i < 6; i++) {
+        sundays.push({
+          date: format(new Date(today), 'MM-dd'), 
+          days: Math.floor(Math.random() * 5) + 2 
+        });
+        today.setDate(today.getDate() + 7);
+      }
+      return sundays;
+    };
+
+    const updateData = () => {
+      setData(calculateSundays());
+    };
+
+    updateData();
+
+    const intervalId = setInterval(() => {
+      updateData(); // Update every week
+    }, 604800000); // 604800000 ms in a week
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleToggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
-
-  const data = [
-    { date: '03-05', days: 4 },
-    { date: '03-12', days: 5 },
-    { date: '03-19', days: 3 },
-    { date: '03-26', days: 4 },
-    { date: '04-02', days: 2 },
-    { date: '04-09', days: 6 },
-  ];
 
   return (
     <div className={`${themeCss[theme]}`}>
