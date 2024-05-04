@@ -15,10 +15,10 @@ function WorkoutPage() {
     return (
         <div className={theme === 'light' ? 'flex flex-col h-screen text-black bg-white' : 'flex flex-col h-screen bg-gray-800 text-white'}>
             <Navbar />
-            <div className="flex-1 p-4 overflow-y-auto">
+            <div className="flex-1 flex flex-col justify-between p-4 overflow-y-auto">
                 <h1 className="text-3xl mb-4 font-bold">Workout</h1>
                 <div 
-                    className="bg-blue-600 hover:bg-blue-700 text-center font-bold py-3 rounded mb-4 cursor-pointer"
+                    className="bg-blue-600 hover:bg-blue-700 text-center font-bold py-5 rounded mb-20 cursor-pointer"
                     onClick={startWorkout}
                 >
                     START A WORKOUT!
