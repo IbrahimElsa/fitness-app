@@ -63,18 +63,30 @@ function ActiveWorkout() {
       const workoutDocName = `workout ${workoutNumber}`;
       const workoutDuration = `${Math.floor(timer / 3600)} : ${Math.floor((timer % 3600) / 60)} : ${timer % 60}`;
       const workoutData = {
-        exercises: workoutExercises.map(exercise => ({
-          ...exercise,
-          sets: [...exercise.sets, ...(exercise.additionalSets || [])].map((set, setIndex) => ({
-            weight: set.weight,
-            reps: set.reps,
-            completed: set.completed,
-            setNumber: setIndex + 1,
-          })),
+        exercises: workoutExercises.map((exercise) => ({
+          Category: exercise.Category,
+          Muscle: exercise.Muscle,
+          Name: exercise.Name,
+          sets: [
+            {
+              completed: exercise.sets[0].completed,
+              reps: exercise.sets[0].reps,
+              setNumber: 1,
+              weight: exercise.sets[0].weight,
+            },
+            ...(exercise.additionalSets || []).map((set, setIndex) => ({
+              completed: set.completed,
+              reps: set.reps,
+              setNumber: setIndex + 2, // Start from 2 since the initial set is 1
+              weight: set.weight,
+            })),
+          ],
         })),
-        duration: workoutDuration, 
+        duration: workoutDuration,
         timestamp: new Date(),
       };
+  
+      console.log('Workout data:', workoutData);
   
       await setDoc(doc(workoutsCollectionRef, workoutDocName), workoutData);
       console.log("Workout saved successfully!");
@@ -85,8 +97,6 @@ function ActiveWorkout() {
     }
   };
   
-
-
   const handleCancelWorkout = () => {
     cancelWorkout();
     setIsActive(false); // Stop the timer
@@ -143,8 +153,8 @@ function ActiveWorkout() {
             {exercise.sets.map((set, setIndex) => (
               <ExerciseSet
                 key={`${exerciseIndex}-${setIndex}`}
-                exerciseName={exercise.Name}
-                setNumber={setIndex + 1}
+                exerciseName={exercise.Name} 
+                setNumber={setIndex + 1} 
                 exerciseIndex={exerciseIndex}
                 updateSets={updateExerciseSets}
               />)

@@ -10,20 +10,22 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIn
 
   const handleWeightChange = (e) => {
     setWeight(e.target.value);
-    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight: e.target.value, reps, completed }, ...additionalSets]);
+    updateSets(exerciseIndex, { weight: e.target.value, reps, completed }, 0);
   };
-
+  
   const handleRepsChange = (e) => {
     setReps(e.target.value);
-    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight, reps: e.target.value, completed }, ...additionalSets]);
+    updateSets(exerciseIndex, { weight, reps: e.target.value, completed }, 0);
   };
-
-  const handleCompletedChange = () => setCompleted(!completed);
+  
+  const handleCompletedChange = () => {
+    setCompleted(!completed);
+    updateSets(exerciseIndex, { weight, reps, completed: !completed }, 0);
+  };
 
   const handleAddSet = () => {
     const lastSet = additionalSets[additionalSets.length - 1] || { weight, reps };
     const newSet = {
-      id: additionalSets.length > 0 ? additionalSets[additionalSets.length - 1].id + 1 : 0,
       prevWeight: lastSet.weight,
       prevReps: lastSet.reps,
       weight: '',
@@ -32,36 +34,42 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIn
     };
     const updatedSets = [...additionalSets, newSet];
     setAdditionalSets(updatedSets);
-    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight, reps, completed }, ...updatedSets]);
+    updateSets(exerciseIndex, newSet, additionalSets.length); // Pass setIndex as the length of additionalSets for the new set
   };
 
-  const handleDeleteSet = (setId) => {
-    const updatedSets = additionalSets.filter(set => set.id !== setId);
+  const handleDeleteSet = (setIndex) => {
+    const updatedSets = additionalSets.filter((set, index) => index !== setIndex - 1);
     setAdditionalSets(updatedSets);
-    setSwipeState(prev => ({ ...prev, [setId]: undefined }));
-    updateSets(exerciseIndex, [{ prevWeight, prevReps, weight, reps, completed }, ...updatedSets]);
+    setSwipeState(prev => ({ ...prev, [setIndex]: undefined }));
+    // No need to call updateSets here since we're not updating any set data
+  };
+
+  const handleAdditionalSetChange = (setIndex, updatedSet) => {
+    const updatedSets = [...additionalSets];
+    updatedSets[setIndex - 1] = updatedSet;
+    setAdditionalSets(updatedSets);
+    updateSets(exerciseIndex, updatedSet, setIndex); // Pass setIndex for the updated additional set
   };
 
   const handlers = useSwipeable({
     onSwiping: (eventData) => {
-      const setId = parseInt(eventData.event.target.closest('.swipe-delete').dataset.setId, 10);
-      if (setId !== undefined) {
+      const setIndex = parseInt(eventData.event.target.closest('.swipe-delete').dataset.setIndex, 10);
+      if (setIndex !== undefined) {
         setSwipeState(prev => ({
           ...prev,
-          [setId]: { deltaX: eventData.deltaX }
+          [setIndex]: { deltaX: eventData.deltaX }
         }));
       }
     },
     onSwiped: (eventData) => {
-      const setId = parseInt(eventData.event.target.closest('.swipe-delete').dataset.setId, 10);
-      if (setId !== undefined) {
-        handleDeleteSet(setId);
-        setSwipeState(prev => ({ ...prev, [setId]: undefined }));
+      const setIndex = parseInt(eventData.event.target.closest('.swipe-delete').dataset.setIndex, 10);
+      if (setIndex !== undefined) {
+        handleDeleteSet(setIndex);
+        setSwipeState(prev => ({ ...prev, [setIndex]: undefined }));
       }
     },
     trackMouse: true,
   });
-
 
   return (
     <div className="exercise-set bg-gray-400 rounded-md p-4 mb-4" {...handlers}>
@@ -102,15 +110,15 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIn
       </div>
 
       {additionalSets.map((set, index) => {
-        const swipeStyles = swipeState[set.id]
-          ? { transform: `translateX(${swipeState[set.id].deltaX}px)` }
+        const swipeStyles = swipeState[index + 1]
+          ? { transform: `translateX(${swipeState[index + 1].deltaX}px)` }
           : {};
 
         return (
           <div
-            key={set.id}
+            key={index}
             className="grid grid-cols-10 text-center mb-4 gap-2 items-center relative swipe-delete"
-            data-set-id={set.id}
+            data-set-index={index + 1}
             style={swipeStyles}
           >
             <div className='col-span-1'>{setNumber + index + 1}</div>
@@ -119,9 +127,11 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIn
               type="text"
               value={set.weight}
               onChange={(e) => {
-                const updatedSets = [...additionalSets];
-                updatedSets[index].weight = e.target.value;
-                setAdditionalSets(updatedSets);
+                const updatedSet = {
+                  ...set,
+                  weight: e.target.value
+                };
+                handleAdditionalSetChange(index + 1, updatedSet);
               }}
               className="  rounded-md px-2 py-1 col-span-3"
             />
@@ -129,9 +139,11 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIn
               type="text"
               value={set.reps}
               onChange={(e) => {
-                const updatedSets = [...additionalSets];
-                updatedSets[index].reps = e.target.value;
-                setAdditionalSets(updatedSets);
+                const updatedSet = {
+                  ...set,
+                  reps: e.target.value
+                };
+                handleAdditionalSetChange(index + 1, updatedSet);
               }}
               className="  rounded-md px-2 py-1 col-span-3"
             />
@@ -140,9 +152,11 @@ const ExerciseSet = ({ exerciseName, prevWeight, prevReps, setNumber, exerciseIn
                 type="checkbox"
                 checked={set.completed}
                 onChange={() => {
-                  const updatedSets = [...additionalSets];
-                  updatedSets[index].completed = !updatedSets[index].completed;
-                  setAdditionalSets(updatedSets);
+                  const updatedSet = {
+                    ...set,
+                    completed: !set.completed
+                  };
+                  handleAdditionalSetChange(index + 1, updatedSet);
                 }}
                 className="form-checkbox text-blue-500"
               />

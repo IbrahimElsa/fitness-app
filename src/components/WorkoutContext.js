@@ -25,22 +25,27 @@ export const WorkoutProvider = ({ children }) => {
     setWorkoutActive(false);
   };
 
-  const updateExerciseSets = (exerciseIndex, newSet) => {
+  const updateExerciseSets = (exerciseIndex, newSet, setIndex) => {
     setWorkoutExercises(prevExercises => {
       const updatedExercises = [...prevExercises];
-      // Check if additionalSets exists, if not, create it
-      if (!updatedExercises[exerciseIndex].additionalSets) {
-        updatedExercises[exerciseIndex].additionalSets = [];
-      }
-      // Determine if this is a new set or an update to an existing one
-      const existingSetIndex = updatedExercises[exerciseIndex].additionalSets.findIndex(set => set.id === newSet.id);
-      if (existingSetIndex >= 0) {
-        // Update existing set
-        updatedExercises[exerciseIndex].additionalSets[existingSetIndex] = newSet;
+  
+      if (setIndex === 0) {
+        updatedExercises[exerciseIndex].sets[setIndex] = newSet;
       } else {
-        // Add new set
-        updatedExercises[exerciseIndex].additionalSets.push(newSet);
+        if (!updatedExercises[exerciseIndex].additionalSets) {
+          updatedExercises[exerciseIndex].additionalSets = [];
+        }
+  
+        const existingSetIndex = updatedExercises[exerciseIndex].additionalSets.findIndex(
+          (set, index) => index === setIndex - 1
+        );
+        if (existingSetIndex >= 0) {
+          updatedExercises[exerciseIndex].additionalSets[existingSetIndex] = newSet;
+        } else {
+          updatedExercises[exerciseIndex].additionalSets.push(newSet);
+        }
       }
+  
       return updatedExercises;
     });
   };
