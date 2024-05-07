@@ -77,7 +77,7 @@ function ActiveWorkout() {
             ...(exercise.additionalSets || []).map((set, setIndex) => ({
               completed: set.completed,
               reps: set.reps,
-              setNumber: setIndex + 2, // Start from 2 since the initial set is 1
+              setNumber: setIndex + 1, // Start from 2 since the initial set is 1
               weight: set.weight,
             })),
           ],
