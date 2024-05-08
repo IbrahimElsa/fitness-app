@@ -29,6 +29,11 @@ const ActiveWorkoutModal = ({
     exercise.Name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleExerciseSelect = (exercise) => {
+    handleAddExercise(exercise);
+    onClose(); // Close the modal after selecting an exercise
+  };
+
   return ReactDOM.createPortal(
     <div
       id="modal-backdrop"
@@ -51,7 +56,7 @@ const ActiveWorkoutModal = ({
             {filteredExercises.map((exercise, index) => (
               <li
                 key={index}
-                onClick={() => handleAddExercise(exercise)}
+                onClick={() => handleExerciseSelect(exercise)}
                 className="cursor-pointer bg-gray-200 text-gray-800 rounded-md p-4 hover:bg-gray-300 transition-colors duration-200"
               >
                 {exercise.Name}

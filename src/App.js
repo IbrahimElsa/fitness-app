@@ -2,8 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import { ThemeProvider } from './components/ThemeContext';
-import { WorkoutProvider } from './components/WorkoutContext';
-import ActiveWorkoutIndicator from './components/ActiveWorkoutIndicator';
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
 import Home from './pages/Home';
@@ -18,9 +16,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <WorkoutProvider>
           <Router>
-            <ActiveWorkoutIndicator /> 
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
@@ -33,7 +29,6 @@ function App() {
               <Route path="/coach" element={<Coach />} />
             </Routes>
           </Router>
-        </WorkoutProvider>
       </AuthProvider>
     </ThemeProvider>
   );
