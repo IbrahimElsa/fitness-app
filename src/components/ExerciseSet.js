@@ -24,7 +24,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange }) => {
   };
 
   return (
-    <div className="exercise-set bg-gray-200 text-gray-800 p-4 rounded-md">
+    <div className="exercise-set bg-gray-200 text-gray-800 p-4 rounded-md mb-4">
       <h3>{exercise.Name}</h3>
       <div className="flex items-center mb-2">
         <h4 className="w-1/4">Set</h4>
@@ -50,12 +50,14 @@ const ExerciseSet = ({ exercise, sets, handleSetChange }) => {
           />
         </div>
       ))}
-      <button
-        onClick={addSet}
-        className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
-      >
-        Add Set
-      </button>
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={addSet}
+          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+        >
+          Add Set
+        </button>
+      </div>
     </div>
   );
 };

@@ -25,15 +25,46 @@ function ActiveWorkout() {
 
   useEffect(() => {
     let interval = null;
+
+    const storeWorkoutData = () => {
+      const workoutData = {
+        localExerciseData,
+        startTime,
+        timer,
+      };
+      localStorage.setItem('activeWorkout', JSON.stringify(workoutData));
+    };
+
     if (isActive) {
       interval = setInterval(() => {
         setTimer((timer) => timer + 1);
+        storeWorkoutData(); // Store the workout data in localStorage
       }, 1000);
     } else {
       clearInterval(interval);
+      localStorage.removeItem('activeWorkout'); // Remove the workout data from localStorage when the workout is not active
     }
-    return () => clearInterval(interval);
-  }, [isActive]);
+
+    return () => {
+      clearInterval(interval);
+      localStorage.removeItem('activeWorkout');
+    };
+  }, [isActive, localExerciseData, startTime, timer]);
+
+  useEffect(() => {
+    const retrieveWorkoutData = () => {
+      const storedWorkoutData = localStorage.getItem('activeWorkout');
+      if (storedWorkoutData) {
+        const { localExerciseData, startTime, timer } = JSON.parse(storedWorkoutData);
+        setLocalExerciseData(localExerciseData);
+        setStartTime(startTime);
+        setTimer(timer);
+        setIsActive(true);
+      }
+    };
+
+    retrieveWorkoutData();
+  }, []);
 
   useEffect(() => {
     if (location.state?.startTimer) {
@@ -58,7 +89,7 @@ function ActiveWorkout() {
         Category: exercise.Category,
         Muscle: exercise.Muscle,
         Name: exercise.Name,
-        sets: [{ weight: '', reps: '' }], // Initialize with an initial set object
+        sets: [{ weight: '', reps: '' }],
       },
     ]);
     closeActiveWorkoutModal();
@@ -100,6 +131,9 @@ function ActiveWorkout() {
       // Add the new workout document to Firestore
       await setDoc(newWorkoutDocRef, workoutData);
 
+      // Remove the active workout data from localStorage
+      localStorage.removeItem('activeWorkout');
+
       // Reset the state after successful submission
       setSelectedExercises([]);
       setLocalExerciseData([]);
@@ -114,6 +148,7 @@ function ActiveWorkout() {
   };
 
   const confirmCancelWorkout = () => {
+    localStorage.removeItem('activeWorkout');
     setIsActive(false);
     navigate("/");
   };
@@ -125,54 +160,68 @@ function ActiveWorkout() {
     const exerciseIndex = newLocalExerciseData.findIndex(
       (ex) => ex.Name === exercise.Name
     );
-  
+
     if (exerciseIndex === -1) {
       // Exercise not found, return without making changes
       return;
     }
-  
+
     if (field === "new") {
       newLocalExerciseData[exerciseIndex].sets.push({ weight: "", reps: "" });
     } else {
       newLocalExerciseData[exerciseIndex].sets[setIndex][field] = value;
     }
-  
+
     setLocalExerciseData(newLocalExerciseData);
   };
 
   return (
-    <div className={`active-workout-page min-h-screen ${containerClass}`}>
-      <div className="flex flex-col items-center pt-4 space-y-4">
+    <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col`}>
+      <div className="w-full flex justify-between p-4">
         <div className="timer-display">
-          Timer: {Math.floor(timer / 3600)} : {Math.floor((timer % 3600) / 60)} : {timer % 60}
+          {timer >= 3600 && `${Math.floor(timer / 3600)}:`}
+          {Math.floor((timer % 3600) / 60).toLocaleString(undefined, {minimumIntegerDigits: 2})}:
+          {(timer % 60).toLocaleString(undefined, {minimumIntegerDigits: 2})}
         </div>
-        <button
-          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
-          onClick={openActiveWorkoutModal}
-        >
-          ADD EXERCISE
-        </button>
         <button
           className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none rounded text-white"
           onClick={handleFinishWorkout}
         >
           FINISH
         </button>
-        <button
-          className="py-2 px-4 bg-red-600 hover:bg-red-700 focus:outline-none rounded text-white"
-          onClick={handleCancelWorkout}
-        >
-          CANCEL WORKOUT
-        </button>
-        {selectedExercises.map((exercise, index) => (
-          <ExerciseSet
-            key={index}
-            exercise={exercise}
-            sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
-            handleSetChange={(setIndex, field, value) => handleSetChange(setIndex, field, value, exercise)}
-          />
-        ))}
       </div>
+      {selectedExercises.length === 0 && (
+        <button
+          className="self-center py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+          onClick={openActiveWorkoutModal}
+        >
+          ADD EXERCISE
+        </button>
+      )}
+      {selectedExercises.map((exercise, index) => (
+        <ExerciseSet
+          key={index}
+          exercise={exercise}
+          sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
+          handleSetChange={(setIndex, field, value) => handleSetChange(setIndex, field, value, exercise)}
+        />
+      ))}
+      {selectedExercises.length > 0 && (
+        <>
+          <button
+            className="self-center py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white mt-4"
+            onClick={openActiveWorkoutModal}
+          >
+            ADD MORE EXERCISES
+          </button>
+          <button
+            className="self-center py-2 px-4 bg-red-600 hover:bg-red-700 focus:outline-none rounded text-white mt-4"
+            onClick={handleCancelWorkout}
+          >
+            CANCEL WORKOUT
+          </button>
+        </>
+      )}
       {showActiveWorkoutModal && (
         <ActiveWorkoutModal
           show={showActiveWorkoutModal}
@@ -188,6 +237,7 @@ function ActiveWorkout() {
       <MobileNavbar />
     </div>
   );
+  
 }
 
 export default ActiveWorkout;
