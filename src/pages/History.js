@@ -34,14 +34,19 @@ function HistoryPage() {
             return;
           }
       
-          const workoutsData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            duration: doc.data().duration,
-            exercises: doc.data().exercises,
-            date: doc.data().timestamp
-              ? new Date(doc.data().timestamp.toDate())
-              : new Date(),
-          }));
+          const workoutsData = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            const formattedDuration = data.duration 
+              ? `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`
+              : "N/A";
+
+            return {
+              id: doc.id,
+              duration: formattedDuration,
+              exercises: data.exercises,
+              date: data.timestamp instanceof Date ? data.timestamp : data.timestamp.toDate ? data.timestamp.toDate() : new Date(),
+            };
+          });
       
           console.log("Fetched workouts data:", workoutsData);
           setWorkouts(workoutsData);
