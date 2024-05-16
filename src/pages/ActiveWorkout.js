@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
 import CancelModal from "../components/CancelModal";
@@ -9,94 +9,78 @@ import { db } from "../firebaseConfig";
 import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
+import { usePersistedState } from "../components/PersistedStateProvider";
 
 function ActiveWorkout() {
-  const [showActiveWorkoutModal, setShowActiveWorkoutModal] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [localExerciseData, setLocalExerciseData] = useState([]);
-  const [startTime, setStartTime] = useState(null);
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const [selectedExercises, setSelectedExercises] = useState([]);
   const { currentUser } = useAuth();
-  const [timer, setTimer] = useState(0);
-  const [isActive, setIsActive] = useState(false);
   const location = useLocation();
+  const { state, setState, clearState } = usePersistedState();
+  const { selectedExercises, localExerciseData, startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
   useEffect(() => {
     let interval = null;
-
-    const storeWorkoutData = () => {
-      const workoutData = {
-        localExerciseData,
-        startTime,
-        timer,
-      };
-      localStorage.setItem('activeWorkout', JSON.stringify(workoutData));
-    };
-
     if (isActive) {
       interval = setInterval(() => {
-        setTimer((timer) => timer + 1);
-        storeWorkoutData(); // Store the workout data in localStorage
+        setState(prevState => ({
+          ...prevState,
+          timer: prevState.timer + 1
+        }));
       }, 1000);
     } else {
       clearInterval(interval);
-      localStorage.removeItem('activeWorkout'); // Remove the workout data from localStorage when the workout is not active
     }
 
     return () => {
       clearInterval(interval);
-      localStorage.removeItem('activeWorkout');
     };
-  }, [isActive, localExerciseData, startTime, timer]);
-
-  useEffect(() => {
-    const retrieveWorkoutData = () => {
-      const storedWorkoutData = localStorage.getItem('activeWorkout');
-      if (storedWorkoutData) {
-        const { localExerciseData, startTime, timer } = JSON.parse(storedWorkoutData);
-        setLocalExerciseData(localExerciseData);
-        setStartTime(startTime);
-        setTimer(timer);
-        setIsActive(true);
-      }
-    };
-
-    retrieveWorkoutData();
-  }, []);
+  }, [isActive, setState]);
 
   useEffect(() => {
     if (location.state?.startTimer) {
-      setIsActive(true);
-      setStartTime(Date.now());
+      setState(prevState => ({
+        ...prevState,
+        isActive: true,
+        startTime: Date.now()
+      }));
     }
-  }, [location]);
+  }, [location, setState]);
 
   const openActiveWorkoutModal = () => {
-    setShowActiveWorkoutModal(true);
+    setState(prevState => ({
+      ...prevState,
+      showActiveWorkoutModal: true
+    }));
   };
 
   const closeActiveWorkoutModal = () => {
-    setShowActiveWorkoutModal(false);
+    setState(prevState => ({
+      ...prevState,
+      showActiveWorkoutModal: false
+    }));
   };
 
   const handleAddExercise = (exercise) => {
-    setSelectedExercises([...selectedExercises, exercise]);
-    setLocalExerciseData([
-      ...localExerciseData,
-      {
-        Category: exercise.Category,
-        Muscle: exercise.Muscle,
-        Name: exercise.Name,
-        sets: [{ weight: '', reps: '' }],
-      },
-    ]);
-    closeActiveWorkoutModal();
+    const newExercise = {
+      Category: exercise.Category,
+      Muscle: exercise.Muscle,
+      Name: exercise.Name,
+      sets: [{ weight: '', reps: '' }],
+    };
+    setState(prevState => ({
+      ...prevState,
+      selectedExercises: [...prevState.selectedExercises, exercise],
+      localExerciseData: [...prevState.localExerciseData, newExercise],
+      showActiveWorkoutModal: false
+    }));
   };
 
   const handleCancelWorkout = () => {
-    setShowCancelModal(true);
+    setState(prevState => ({
+      ...prevState,
+      showCancelModal: true
+    }));
   };
 
   const handleFinishWorkout = async () => {
@@ -128,19 +112,9 @@ function ActiveWorkout() {
         timestamp: new Date().toISOString(),
       };
 
-      // Add the new workout document to Firestore
       await setDoc(newWorkoutDocRef, workoutData);
 
-      // Remove the active workout data from localStorage
-      localStorage.removeItem('activeWorkout');
-
-      // Reset the state after successful submission
-      setSelectedExercises([]);
-      setLocalExerciseData([]);
-      setTimer(0);
-      setIsActive(false);
-
-      // Navigate to the desired route after finishing the workout
+      clearState();
       navigate("/");
     } catch (error) {
       console.error("Error adding workout: ", error);
@@ -148,31 +122,34 @@ function ActiveWorkout() {
   };
 
   const confirmCancelWorkout = () => {
-    localStorage.removeItem('activeWorkout');
-    setIsActive(false);
+    clearState();
     navigate("/");
   };
 
   const containerClass = theme === "light" ? "bg-white text-black" : "bg-gray-800 text-white";
 
-  const handleSetChange = (setIndex, field, value, exercise) => {
-    const newLocalExerciseData = [...localExerciseData];
-    const exerciseIndex = newLocalExerciseData.findIndex(
-      (ex) => ex.Name === exercise.Name
-    );
+  const handleSetChange = (exerciseName, setIndex, field, value) => {
+    setState(prevState => {
+      const newLocalExerciseData = [...prevState.localExerciseData];
+      const exerciseIndex = newLocalExerciseData.findIndex(
+        (ex) => ex.Name === exerciseName
+      );
 
-    if (exerciseIndex === -1) {
-      // Exercise not found, return without making changes
-      return;
-    }
+      if (exerciseIndex === -1) {
+        return prevState;
+      }
 
-    if (field === "new") {
-      newLocalExerciseData[exerciseIndex].sets.push({ weight: "", reps: "" });
-    } else {
-      newLocalExerciseData[exerciseIndex].sets[setIndex][field] = value;
-    }
+      if (field === "new") {
+        newLocalExerciseData[exerciseIndex].sets.push({ weight: "", reps: "" });
+      } else {
+        newLocalExerciseData[exerciseIndex].sets[setIndex][field] = value;
+      }
 
-    setLocalExerciseData(newLocalExerciseData);
+      return {
+        ...prevState,
+        localExerciseData: newLocalExerciseData
+      };
+    });
   };
 
   return (
@@ -180,8 +157,8 @@ function ActiveWorkout() {
       <div className="w-full flex justify-between p-4">
         <div className="timer-display">
           {timer >= 3600 && `${Math.floor(timer / 3600)}:`}
-          {Math.floor((timer % 3600) / 60).toLocaleString(undefined, {minimumIntegerDigits: 2})}:
-          {(timer % 60).toLocaleString(undefined, {minimumIntegerDigits: 2})}
+          {Math.floor((timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
+          {(timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
         </div>
         <button
           className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none rounded text-white"
@@ -203,7 +180,7 @@ function ActiveWorkout() {
           key={index}
           exercise={exercise}
           sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
-          handleSetChange={(setIndex, field, value) => handleSetChange(setIndex, field, value, exercise)}
+          handleSetChange={handleSetChange}
         />
       ))}
       {selectedExercises.length > 0 && (
@@ -232,12 +209,14 @@ function ActiveWorkout() {
         />
       )}
       {showCancelModal && (
-        <CancelModal onConfirm={confirmCancelWorkout} onClose={() => setShowCancelModal(false)} />
+        <CancelModal onConfirm={confirmCancelWorkout} onClose={() => setState(prevState => ({
+          ...prevState,
+          showCancelModal: false
+        }))} />
       )}
       <MobileNavbar />
     </div>
   );
-  
 }
 
 export default ActiveWorkout;

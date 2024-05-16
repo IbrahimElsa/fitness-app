@@ -1,26 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ExerciseSet = ({ exercise, sets, handleSetChange }) => {
-  const [localSets, setLocalSets] = useState(sets.length > 0 ? sets : [{ weight: '', reps: '' }]);
+  const [localSets, setLocalSets] = useState(sets);
+
+  useEffect(() => {
+    setLocalSets(sets);
+  }, [sets]);
 
   const handleWeightChange = (setIndex, value) => {
     const newSets = [...localSets];
     newSets[setIndex].weight = value;
     setLocalSets(newSets);
-    handleSetChange(setIndex, 'weight', value);
+    handleSetChange(exercise.Name, setIndex, 'weight', value);
   };
 
   const handleRepsChange = (setIndex, value) => {
     const newSets = [...localSets];
     newSets[setIndex].reps = value;
     setLocalSets(newSets);
-    handleSetChange(setIndex, 'reps', value);
+    handleSetChange(exercise.Name, setIndex, 'reps', value);
   };
 
   const addSet = () => {
     const newSets = [...localSets, { weight: '', reps: '' }];
     setLocalSets(newSets);
-    handleSetChange(localSets.length, 'new', { weight: '', reps: '' });
+    handleSetChange(exercise.Name, localSets.length, 'new', { weight: '', reps: '' });
   };
 
   return (
