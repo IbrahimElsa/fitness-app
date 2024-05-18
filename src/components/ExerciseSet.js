@@ -1,11 +1,40 @@
 import React, { useState, useEffect } from 'react';
+import { db } from '../firebaseConfig';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'; // Add orderBy and limit imports
 
-const ExerciseSet = ({ exercise, sets, handleSetChange }) => {
+const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
   const [localSets, setLocalSets] = useState(sets);
+  const [prevWorkoutData, setPrevWorkoutData] = useState([]);
 
   useEffect(() => {
     setLocalSets(sets);
   }, [sets]);
+
+  useEffect(() => {
+    const fetchPrevWorkoutData = async () => {
+      try {
+        const userId = currentUser.uid;
+        const workoutsCollectionRef = collection(db, 'users', userId, 'workouts');
+        const q = query(
+          workoutsCollectionRef,
+          orderBy('timestamp', 'desc'),
+          limit(1)
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const prevWorkout = querySnapshot.docs[0].data();
+          const prevSets = prevWorkout.exercises.find(ex => ex.Name === exercise.Name)?.sets || [];
+          setPrevWorkoutData(prevSets);
+        } else {
+          setPrevWorkoutData([]);
+        }
+      } catch (error) {
+        console.error('Error fetching previous workout data: ', error);
+      }
+    };
+
+    fetchPrevWorkoutData();
+  }, [exercise.Name, currentUser]);
 
   const handleWeightChange = (setIndex, value) => {
     const newSets = [...localSets];
@@ -32,12 +61,18 @@ const ExerciseSet = ({ exercise, sets, handleSetChange }) => {
       <h3>{exercise.Name}</h3>
       <div className="flex items-center mb-2">
         <h4 className="w-1/4">Set</h4>
+        <h4 className="w-1/4">Prev Workout</h4>
         <h4 className="w-1/4">Weight</h4>
         <h4 className="w-1/4">Reps</h4>
       </div>
       {localSets.map((set, index) => (
         <div key={index} className="flex items-center mb-2">
           <span className="w-1/4">{index + 1}</span>
+          <span className="w-1/4">
+            {prevWorkoutData[index]
+              ? `${prevWorkoutData[index].weight} x ${prevWorkoutData[index].reps}`
+              : '- x -'}
+          </span>
           <input
             type="text"
             value={set.weight}

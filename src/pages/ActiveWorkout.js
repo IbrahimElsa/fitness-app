@@ -181,6 +181,7 @@ function ActiveWorkout() {
           exercise={exercise}
           sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
           handleSetChange={handleSetChange}
+          currentUser={currentUser} // Pass currentUser as a prop
         />
       ))}
       {selectedExercises.length > 0 && (
