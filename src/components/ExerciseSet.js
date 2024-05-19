@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'; // Add orderBy and limit imports
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
   const [localSets, setLocalSets] = useState(sets);
@@ -15,11 +15,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
       try {
         const userId = currentUser.uid;
         const workoutsCollectionRef = collection(db, 'users', userId, 'workouts');
-        const q = query(
-          workoutsCollectionRef,
-          orderBy('timestamp', 'desc'),
-          limit(1)
-        );
+        const q = query(workoutsCollectionRef, orderBy('timestamp', 'desc'), limit(1));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
           const prevWorkout = querySnapshot.docs[0].data();

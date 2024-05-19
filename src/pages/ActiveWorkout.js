@@ -96,30 +96,32 @@ function ActiveWorkout() {
       const durationString = `${Math.floor(durationInSeconds / 3600)}:${Math.floor(
         (durationInSeconds % 3600) / 60
       )}:${durationInSeconds % 60}`;
-
+  
       const workoutData = {
         duration: durationString,
         exercises: localExerciseData.map((exercise) => ({
           Category: exercise.Category,
           Muscle: exercise.Muscle,
           Name: exercise.Name,
-          sets: exercise.sets.map((set, index) => ({
-            setNumber: index + 1,
-            weight: set.weight,
-            reps: set.reps,
-          })),
+          sets: exercise.sets.filter(set => set.weight !== '' || set.reps !== '')
+            .map((set, index) => ({
+              setNumber: index + 1,
+              weight: set.weight,
+              reps: set.reps,
+            })),
         })),
         timestamp: new Date().toISOString(),
       };
-
+  
       await setDoc(newWorkoutDocRef, workoutData);
-
+  
       clearState();
       navigate("/");
     } catch (error) {
       console.error("Error adding workout: ", error);
     }
   };
+  
 
   const confirmCancelWorkout = () => {
     clearState();
