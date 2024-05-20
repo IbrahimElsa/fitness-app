@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
 import CancelModal from "../components/CancelModal";
@@ -19,30 +19,32 @@ function ActiveWorkout() {
   const { state, setState, clearState } = usePersistedState();
   const { selectedExercises, localExerciseData, startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
+  const [displayTimer, setDisplayTimer] = useState(timer);
+
   useEffect(() => {
-    let interval = null;
     if (isActive) {
-      interval = setInterval(() => {
+      const interval = setInterval(() => {
+        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        setDisplayTimer(elapsedTime);
         setState(prevState => ({
           ...prevState,
-          timer: prevState.timer + 1
+          timer: elapsedTime
         }));
       }, 1000);
-    } else {
-      clearInterval(interval);
-    }
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isActive, setState]);
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [isActive, startTime, setState]);
 
   useEffect(() => {
     if (location.state?.startTimer) {
+      const currentStartTime = Date.now();
       setState(prevState => ({
         ...prevState,
         isActive: true,
-        startTime: Date.now()
+        startTime: currentStartTime
       }));
     }
   }, [location, setState]);
@@ -96,7 +98,7 @@ function ActiveWorkout() {
       const durationString = `${Math.floor(durationInSeconds / 3600)}:${Math.floor(
         (durationInSeconds % 3600) / 60
       )}:${durationInSeconds % 60}`;
-  
+
       const workoutData = {
         duration: durationString,
         exercises: localExerciseData.map((exercise) => ({
@@ -112,16 +114,15 @@ function ActiveWorkout() {
         })),
         timestamp: new Date().toISOString(),
       };
-  
+
       await setDoc(newWorkoutDocRef, workoutData);
-  
+
       clearState();
       navigate("/");
     } catch (error) {
       console.error("Error adding workout: ", error);
     }
   };
-  
 
   const confirmCancelWorkout = () => {
     clearState();
@@ -155,12 +156,12 @@ function ActiveWorkout() {
   };
 
   return (
-    <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col`}>
+    <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}> {/* Add padding-bottom */}
       <div className="w-full flex justify-between p-4">
         <div className="timer-display">
-          {timer >= 3600 && `${Math.floor(timer / 3600)}:`}
-          {Math.floor((timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
-          {(timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
+          {displayTimer >= 3600 && `${Math.floor(displayTimer / 3600)}:`}
+          {Math.floor((displayTimer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
+          {(displayTimer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
         </div>
         <button
           className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none rounded text-white"
@@ -170,12 +171,20 @@ function ActiveWorkout() {
         </button>
       </div>
       {selectedExercises.length === 0 && (
-        <button
-          className="self-center py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
-          onClick={openActiveWorkoutModal}
-        >
-          ADD EXERCISE
-        </button>
+        <div className="flex flex-col items-center">
+          <button
+            className="self-center py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+            onClick={openActiveWorkoutModal}
+          >
+            ADD EXERCISE
+          </button>
+          <button
+            className="self-center py-2 px-4 bg-red-600 hover:bg-red-700 focus:outline-none rounded text-white mt-4"
+            onClick={handleCancelWorkout}
+          >
+            CANCEL WORKOUT
+          </button>
+        </div>
       )}
       {selectedExercises.map((exercise, index) => (
         <ExerciseSet
