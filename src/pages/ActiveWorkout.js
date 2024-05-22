@@ -10,6 +10,7 @@ import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { usePersistedState } from "../components/PersistedStateProvider";
+import TimerModal from "../components/TimerModal"; // Import the TimerModal component
 
 function ActiveWorkout() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ function ActiveWorkout() {
   const { selectedExercises, localExerciseData, startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
   const [displayTimer, setDisplayTimer] = useState(timer);
+  const [isTimerModalOpen, setIsTimerModalOpen] = useState(false); // State for controlling the TimerModal
 
   useEffect(() => {
     if (isActive) {
@@ -156,9 +158,15 @@ function ActiveWorkout() {
   };
 
   return (
-    <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}> {/* Add padding-bottom */}
+    <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}>
       <div className="w-full flex justify-between p-4">
-        <div className="timer-display">
+      <button
+        className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+        onClick={() => setIsTimerModalOpen(true)} // Open the TimerModal when clicked
+      >
+        TIMER
+      </button>
+        <div className="timer-display text-lg pt-1">
           {displayTimer >= 3600 && `${Math.floor(displayTimer / 3600)}:`}
           {Math.floor((displayTimer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
           {(displayTimer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
@@ -170,6 +178,7 @@ function ActiveWorkout() {
           FINISH
         </button>
       </div>
+
       {selectedExercises.length === 0 && (
         <div className="flex flex-col items-center">
           <button
@@ -192,7 +201,7 @@ function ActiveWorkout() {
           exercise={exercise}
           sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
           handleSetChange={handleSetChange}
-          currentUser={currentUser} // Pass currentUser as a prop
+          currentUser={currentUser}
         />
       ))}
       {selectedExercises.length > 0 && (
@@ -227,6 +236,7 @@ function ActiveWorkout() {
         }))} />
       )}
       <MobileNavbar />
+      <TimerModal isOpen={isTimerModalOpen} onClose={() => setIsTimerModalOpen(false)} /> {/* Add TimerModal */}
     </div>
   );
 }
