@@ -20,36 +20,66 @@ function ActiveWorkout() {
   const { state, setState, clearState } = usePersistedState();
   const { selectedExercises, localExerciseData, startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
-  const [displayTimer, setDisplayTimer] = useState(timer);
-  const [isTimerModalOpen, setIsTimerModalOpen] = useState(false); // State for controlling the TimerModal
+  // Define state for TimerModal and timeLeft
+  const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const savedTimeLeft = localStorage.getItem("timeLeft");
+    return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
+  });
 
   useEffect(() => {
-    if (isActive) {
-      const interval = setInterval(() => {
-        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        setDisplayTimer(elapsedTime);
-        setState(prevState => ({
-          ...prevState,
-          timer: elapsedTime
-        }));
-      }, 1000);
-
-      return () => {
-        clearInterval(interval);
-      };
+    const savedTimer = localStorage.getItem("timer");
+    if (savedTimer !== null) {
+      setState(prevState => ({
+        ...prevState,
+        timer: JSON.parse(savedTimer)
+      }));
     }
-  }, [isActive, startTime, setState]);
+  }, [setState]);
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive) {
+      interval = setInterval(() => {
+        setState(prevState => {
+          const newTimer = prevState.timer + 1;
+          localStorage.setItem("timer", JSON.stringify(newTimer));
+          return {
+            ...prevState,
+            timer: newTimer
+          };
+        });
+      }, 1000);
+    } else {
+      clearInterval(interval);
+    }
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isActive, setState]);
 
   useEffect(() => {
     if (location.state?.startTimer) {
-      const currentStartTime = Date.now();
       setState(prevState => ({
         ...prevState,
         isActive: true,
-        startTime: currentStartTime
+        startTime: Date.now()
       }));
     }
   }, [location, setState]);
+
+  useEffect(() => {
+    if (timeLeft !== null) {
+      localStorage.setItem("timeLeft", JSON.stringify(timeLeft));
+      if (timeLeft === 0) {
+        localStorage.removeItem("timeLeft");
+        setTimeLeft(null);
+      }
+    } else {
+      localStorage.removeItem("timeLeft");
+    }
+  }, [timeLeft]);
 
   const openActiveWorkoutModal = () => {
     setState(prevState => ({
@@ -120,6 +150,8 @@ function ActiveWorkout() {
       await setDoc(newWorkoutDocRef, workoutData);
 
       clearState();
+      localStorage.removeItem("timer");
+      localStorage.removeItem("timeLeft");
       navigate("/");
     } catch (error) {
       console.error("Error adding workout: ", error);
@@ -128,6 +160,8 @@ function ActiveWorkout() {
 
   const confirmCancelWorkout = () => {
     clearState();
+    localStorage.removeItem("timer");
+    localStorage.removeItem("timeLeft");
     navigate("/");
   };
 
@@ -157,19 +191,25 @@ function ActiveWorkout() {
     });
   };
 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
+  };
+
   return (
     <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}>
       <div className="w-full flex justify-between p-4">
-      <button
-        className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
-        onClick={() => setIsTimerModalOpen(true)} // Open the TimerModal when clicked
-      >
-        TIMER
-      </button>
-        <div className="timer-display text-lg pt-1">
-          {displayTimer >= 3600 && `${Math.floor(displayTimer / 3600)}:`}
-          {Math.floor((displayTimer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
-          {(displayTimer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
+        <button
+          className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+          onClick={() => setIsTimerModalOpen(true)} // Open the TimerModal when clicked
+        >
+          {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
+        </button>
+        <div className="timer-display text-center text-lg">
+          {timer >= 3600 && `${Math.floor(timer / 3600)}:`}
+          {Math.floor((timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
+          {(timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
         </div>
         <button
           className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none rounded text-white"
@@ -178,7 +218,6 @@ function ActiveWorkout() {
           FINISH
         </button>
       </div>
-
       {selectedExercises.length === 0 && (
         <div className="flex flex-col items-center">
           <button
@@ -236,7 +275,12 @@ function ActiveWorkout() {
         }))} />
       )}
       <MobileNavbar />
-      <TimerModal isOpen={isTimerModalOpen} onClose={() => setIsTimerModalOpen(false)} /> {/* Add TimerModal */}
+      <TimerModal
+        isOpen={isTimerModalOpen}
+        onClose={() => setIsTimerModalOpen(false)}
+        timeLeft={timeLeft}
+        setTimeLeft={setTimeLeft}
+      /> {/* Add TimerModal */}
     </div>
   );
 }

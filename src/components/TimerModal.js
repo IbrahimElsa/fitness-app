@@ -1,33 +1,39 @@
 import React, { useState, useEffect } from "react";
 
-const TimerModal = ({ isOpen, onClose }) => {
+const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
   const [selectedTime, setSelectedTime] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(null);
-  const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     if (timeLeft === 0) {
       setSelectedTime(null);
       setTimeLeft(null);
-      setIsRunning(false);
     }
 
     if (timeLeft > 0) {
       const timerId = setInterval(() => {
-        setTimeLeft(timeLeft - 1);
+        setTimeLeft((prevTimeLeft) => {
+          const newTime = prevTimeLeft - 1;
+          localStorage.setItem("timeLeft", JSON.stringify(newTime));
+          return newTime;
+        });
       }, 1000);
       return () => clearInterval(timerId);
     }
-  }, [timeLeft]);
+  }, [timeLeft, setTimeLeft]);
 
   const handleTimeSelection = (minutes) => {
-    setSelectedTime(minutes * 60);
-    setTimeLeft(minutes * 60);
-    setIsRunning(true);
+    const newTime = minutes * 60;
+    setSelectedTime(newTime);
+    setTimeLeft(newTime);
+    localStorage.setItem("timeLeft", JSON.stringify(newTime));
   };
 
   const adjustTime = (seconds) => {
-    setTimeLeft((prevTime) => Math.max(prevTime + seconds, 0));
+    setTimeLeft((prevTime) => {
+      const newTime = Math.max(prevTime + seconds, 0);
+      localStorage.setItem("timeLeft", JSON.stringify(newTime));
+      return newTime;
+    });
   };
 
   const formatTime = (seconds) => {
@@ -55,7 +61,7 @@ const TimerModal = ({ isOpen, onClose }) => {
         )}
         <div className="flex flex-col justify-end space-y-4">
           <div className="timer-options flex justify-around mb-4">
-            {!isRunning
+            {!timeLeft
               ? [1, 2, 3, 4].map((minute) => (
                   <button
                     key={minute}
