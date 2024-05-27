@@ -26,6 +26,7 @@ const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
     setSelectedTime(newTime);
     setTimeLeft(newTime);
     localStorage.setItem("timeLeft", JSON.stringify(newTime));
+    localStorage.setItem("timerStartTime", JSON.stringify(Date.now()));
   };
 
   const adjustTime = (seconds) => {
@@ -41,6 +42,22 @@ const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
     const secs = seconds % 60;
     return `${minutes.toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
   };
+
+  useEffect(() => {
+    const savedTimeLeft = localStorage.getItem("timeLeft");
+    const timerStartTime = localStorage.getItem("timerStartTime");
+
+    if (savedTimeLeft && timerStartTime) {
+      const elapsedTime = Math.floor((Date.now() - JSON.parse(timerStartTime)) / 1000);
+      const newTimeLeft = JSON.parse(savedTimeLeft) - elapsedTime;
+
+      if (newTimeLeft > 0) {
+        setTimeLeft(newTimeLeft);
+      } else {
+        setTimeLeft(0);
+      }
+    }
+  }, [setTimeLeft]);
 
   if (!isOpen) return null;
 

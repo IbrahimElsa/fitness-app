@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
 import { format } from 'date-fns';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from "../firebaseConfig";
 
 function Home() {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ function Home() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { toggleTheme, theme, themeCss } = useTheme();
   const [data, setData] = useState([]);
+  const [profilePic, setProfilePic] = useState(null);
 
   useEffect(() => {
     const calculateSundays = () => {
@@ -44,6 +47,18 @@ function Home() {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    const fetchProfilePic = async () => {
+      if (currentUser) {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          setProfilePic(userDoc.data().profilePic);
+        }
+      }
+    };
+    fetchProfilePic();
+  }, [currentUser]);
+
   const handleToggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
@@ -56,7 +71,21 @@ function Home() {
           <h1 className="text-3xl pt-12 pl-6 font-bold">Home</h1>
           {currentUser ? (
             <div className="relative">
-              <FontAwesomeIcon icon={faUserCircle} size="2x" className="cursor-pointer" onClick={handleToggleDropdown} />
+              {profilePic ? (
+                <img 
+                  src={profilePic} 
+                  alt="Profile" 
+                  className="rounded-full w-12 h-12 object-cover cursor-pointer"
+                  onClick={handleToggleDropdown}
+                />
+              ) : (
+                <FontAwesomeIcon 
+                  icon={faUserCircle} 
+                  size="2x" 
+                  className="cursor-pointer" 
+                  onClick={handleToggleDropdown} 
+                />
+              )}
               {dropdownOpen && (
                 <div className={`absolute right-0 mt-2 py-2 w-48 rounded-md shadow-xl z-20 ${themeCss[theme]}`}>
                   <Link to="/profile" className="block px-4 py-2 text-sm capitalize hover:bg-blue-500 hover:text-white">

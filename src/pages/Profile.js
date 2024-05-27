@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
@@ -7,18 +7,10 @@ import DeleteAccModal from "../components/DeleteAccModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
-import {
-    reauthenticateWithCredential,
-    EmailAuthProvider,
-    deleteUser as firebaseDeleteUser
-} from "firebase/auth";
-import {
-    getFirestore,
-    doc,
-    deleteDoc,
-    collection,
-    getDocs
-} from 'firebase/firestore';
+import { doc, deleteDoc, collection, getDocs, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { EmailAuthProvider, reauthenticateWithCredential, deleteUser as firebaseDeleteUser } from "firebase/auth";
+import { db, storage } from "../firebaseConfig";
 
 function Profile() {
     const navigate = useNavigate();
@@ -26,8 +18,20 @@ function Profile() {
     const [modalOpen, setModalOpen] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [profilePic, setProfilePic] = useState(null);
     const { theme } = useTheme();
-    const db = getFirestore();
+
+    useEffect(() => {
+        const fetchProfilePic = async () => {
+            if (currentUser) {
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                if (userDoc.exists()) {
+                    setProfilePic(userDoc.data().profilePic);
+                }
+            }
+        };
+        fetchProfilePic();
+    }, [currentUser]);
 
     const handleLogout = async () => {
         try {
@@ -82,6 +86,17 @@ function Profile() {
         await deleteUserAndData(password);
     };
 
+    const handleProfilePicChange = async (e) => {
+        if (e.target.files[0]) {
+            const file = e.target.files[0];
+            const storageRef = ref(storage, `profilePictures/${currentUser.uid}`);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            await updateDoc(doc(db, "users", currentUser.uid), { profilePic: downloadURL });
+            setProfilePic(downloadURL);
+        }
+    };
+
     const backgroundColor = theme === 'light' ? 'bg-gray-200' : 'bg-gray-800';
     const textColor = theme === 'light' ? 'text-gray-700' : 'text-white';
 
@@ -93,11 +108,27 @@ function Profile() {
                     <h1 className="text-3xl pt-12 pl-6">Profile</h1>
                     
                     <div className="flex flex-col justify-center items-center flex-1">
-                        <div className="w-full flex justify-center">
+                        <div className="w-full flex justify-center relative">
+                            {profilePic ? (
+                                <img 
+                                src={profilePic} 
+                                alt="Profile" 
+                                className="rounded-full w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 mt-12 mb-10 object-cover cursor-pointer"
+                                onClick={() => document.getElementById('profilePicInput').click()}
+                            />
+                        ) : (
                             <FontAwesomeIcon 
                                 icon={faUserCircle} 
                                 size="9x" 
-                                className={`mt-12 ${textColor} pb-10`}
+                                className={`mt-12 ${textColor} pb-10 cursor-pointer`} 
+                                onClick={() => document.getElementById('profilePicInput').click()}
+                            />
+                        )}
+                            <input 
+                                type="file" 
+                                id="profilePicInput" 
+                                style={{ display: 'none' }} 
+                                onChange={handleProfilePicChange}
                             />
                         </div>
                         <button
