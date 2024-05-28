@@ -10,7 +10,7 @@ import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { usePersistedState } from "../components/PersistedStateProvider";
-import TimerModal from "../components/TimerModal"; // Import the TimerModal component
+import TimerModal from "../components/TimerModal";
 
 function ActiveWorkout() {
   const navigate = useNavigate();
@@ -152,7 +152,7 @@ function ActiveWorkout() {
       clearState();
       localStorage.removeItem("timer");
       localStorage.removeItem("timeLeft");
-      navigate("/");
+      navigate("/finished-workout");
     } catch (error) {
       console.error("Error adding workout: ", error);
     }

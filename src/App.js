@@ -12,6 +12,7 @@ import ActiveWorkout from './pages/ActiveWorkout';
 import Exercises from './pages/Exercises';
 import Coach from './pages/Coach';
 import Profile from './pages/Profile';
+import FinishedWorkout from './pages/FinishedWorkout';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                 <ActiveWorkout />
               </PersistedStateProvider>
             } />
+            <Route path="/finished-workout" element={<FinishedWorkout />} />
             <Route path="/exercises" element={<Exercises />} />
             <Route path="/coach" element={<Coach />} />
           </Routes>
