@@ -45,20 +45,19 @@ const FinishedWorkout = () => {
       <div className="w-full flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-4">Workout Summary</h1>
         <h2 className="text-xl mb-2">Duration: {workoutData.duration}</h2>
-        <div className="w-full max-w-2xl">
+        <div className=" w-11/12 max-w-xl bg-gray-300 text-gray-800 p-4 rounded-md mb-4">
           {workoutData.exercises.map((exercise, index) => (
-            <div key={index} className="exercise-set bg-gray-200 text-gray-800 p-4 rounded-md mb-4">
-              <h3 className="text-lg font-semibold">{exercise.Name}</h3>
-              <div className="flex items-center mb-2">
+            <div key={index} className="exercise-set ">
+              <h3 className="text-xl font-bold">{exercise.Name}</h3>
+              <div className="flex items-center mb-2 font-semibold text-lg">
                 <h4 className="w-1/4">Set</h4>
-                <h4 className="w-1/4">Weight</h4>
-                <h4 className="w-1/4">Reps</h4>
+                <h4 className="w-1/2">Weight x Reps</h4>
               </div>
               {exercise.sets.map((set, setIndex) => (
-                <div key={setIndex} className="flex items-center mb-2">
+                <div key={setIndex} className="flex items-center mb-2 text-lg">
                   <span className="w-1/4">{setIndex + 1}</span>
-                  <span className="w-1/4">{set.weight}</span>
-                  <span className="w-1/4">{set.reps}</span>
+                  <span className="w-1/2">{set.weight} x {set.reps}</span>
+
                 </div>
               ))}
             </div>
