@@ -4,10 +4,12 @@ import { db } from "../firebaseConfig";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import MobileNavbar from "../components/MobileNavbar";
+import { useTheme } from "../components/ThemeContext";
 
 const FinishedWorkout = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { theme } = useTheme();
   const [workoutData, setWorkoutData] = useState(null);
 
   useEffect(() => {
@@ -32,8 +34,11 @@ const FinishedWorkout = () => {
     return <div>Loading...</div>;
   }
 
+  const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
+  const summaryClass = theme === 'light' ? 'bg-gray-300 text-gray-800' : 'bg-gray-700 text-white';
+
   return (
-    <div className="finished-workout-page min-h-screen bg-white text-black flex flex-col pb-16">
+    <div className={`finished-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}>
       <div className="w-full flex justify-between p-4">
         <button
           className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
@@ -45,7 +50,7 @@ const FinishedWorkout = () => {
       <div className="w-full flex flex-col items-center">
         <h1 className="text-2xl font-bold mb-4">Workout Summary</h1>
         <h2 className="text-xl mb-2">Duration: {workoutData.duration}</h2>
-        <div className=" w-11/12 max-w-xl bg-gray-300 text-gray-800 p-4 rounded-md mb-4">
+        <div className={`w-11/12 max-w-xl ${summaryClass} p-4 rounded-md mb-4`}>
           {workoutData.exercises.map((exercise, index) => (
             <div key={index} className="exercise-set ">
               <h3 className="text-xl font-bold">{exercise.Name}</h3>
@@ -57,7 +62,6 @@ const FinishedWorkout = () => {
                 <div key={setIndex} className="flex items-center mb-2 text-lg">
                   <span className="w-1/4">{setIndex + 1}</span>
                   <span className="w-1/2">{set.weight} x {set.reps}</span>
-
                 </div>
               ))}
             </div>

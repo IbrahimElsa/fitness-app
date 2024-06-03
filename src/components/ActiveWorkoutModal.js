@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
+import { useTheme } from "../components/ThemeContext";
 
 const ActiveWorkoutModal = ({
   show,
@@ -9,6 +10,7 @@ const ActiveWorkoutModal = ({
   exercisesData,
   handleAddExercise,
 }) => {
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
 
   if (!show) {
@@ -34,13 +36,17 @@ const ActiveWorkoutModal = ({
     onClose(); // Close the modal after selecting an exercise
   };
 
+  const containerClass = theme === 'light' ? 'bg-white text-gray-800' : 'bg-gray-800 text-white';
+  const inputClass = theme === 'light' ? 'bg-gray-200 text-gray-800' : 'bg-gray-700 text-white';
+  const itemClass = theme === 'light' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'bg-gray-700 text-white hover:bg-gray-600';
+
   return ReactDOM.createPortal(
     <div
       id="modal-backdrop"
       className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
       onClick={handleOutsideClick}
     >
-      <div className="bg-white rounded-md shadow-lg relative max-h-5/6 h-5/6 max-w-96 w-96">
+      <div className={`rounded-md shadow-lg relative max-h-5/6 h-5/6 max-w-96 w-96 ${containerClass}`}>
         <div className="p-4 h-full overflow-y-auto">
           <h4 className="text-lg font-bold mb-4">{title}</h4>
           <div className="mb-4">
@@ -49,7 +55,7 @@ const ActiveWorkoutModal = ({
               placeholder="Search exercises..."
               value={searchQuery}
               onChange={handleSearch}
-              className="bg-gray-200 text-gray-800 rounded-md px-2 py-1 w-full"
+              className={`rounded-md px-2 py-1 w-full ${inputClass}`}
             />
           </div>
           <ul className="space-y-2">
@@ -57,7 +63,7 @@ const ActiveWorkoutModal = ({
               <li
                 key={index}
                 onClick={() => handleExerciseSelect(exercise)}
-                className="cursor-pointer bg-gray-200 text-gray-800 rounded-md p-4 hover:bg-gray-300 transition-colors duration-200"
+                className={`cursor-pointer rounded-md p-4 transition-colors duration-200 ${itemClass}`}
               >
                 {exercise.Name}
               </li>

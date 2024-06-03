@@ -78,7 +78,7 @@ function HistoryPage() {
             <div className="flex flex-col items-center justify-center min-h-screen pt-10">
                 {workouts.length > 0 ? (
                     workouts.map((workout) => (
-                        <div key={workout.id} className="workout-item bg-white shadow-md rounded-lg p-4 mb-4 w-3/4">
+                        <div key={workout.id} className={`workout-item ${theme === 'light' ? 'bg-white text-black' : 'bg-gray-700 text-white'} shadow-md rounded-lg p-4 mb-4 w-11/12`}>
                             <p className="text-lg font-bold">Workout on {workout.date.toLocaleDateString()}</p>
                             <p className="text-sm">Duration: {workout.duration}</p>
                             {workout.exercises.map((exercise, index) => (

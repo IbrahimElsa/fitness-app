@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { useTheme } from "../components/ThemeContext";
 
 const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
   const [localSets, setLocalSets] = useState(sets);
   const [prevWorkoutData, setPrevWorkoutData] = useState([]);
+  const { theme } = useTheme();
 
   useEffect(() => {
     setLocalSets(sets);
@@ -52,8 +54,15 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
     handleSetChange(exercise.Name, localSets.length, 'new', { weight: '', reps: '' });
   };
 
+  const containerClass = theme === 'light' 
+    ? 'bg-gray-200 text-gray-800' 
+    : 'bg-gray-800 text-white border-t border-b border-gray-600';
+  const inputClass = theme === 'light' 
+    ? 'bg-gray-300 text-black' 
+    : 'bg-gray-600 text-white';
+
   return (
-    <div className="exercise-set bg-gray-200 text-gray-800 p-4 rounded-md mb-4">
+    <div className={`exercise-set ${containerClass} p-4 rounded-md mb-4`}>
       <h3>{exercise.Name}</h3>
       <div className="flex items-center mb-2">
         <h4 className="w-1/4">Set</h4>
@@ -73,14 +82,14 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
             type="text"
             value={set.weight}
             onChange={(e) => handleWeightChange(index, e.target.value)}
-            className="weight-input w-1/4 bg-gray-300 rounded-md px-2 py-1"
+            className={`weight-input w-1/5 ${inputClass} rounded-md px-2 py-1`}
             placeholder="Weight"
           />
           <input
             type="text"
             value={set.reps}
             onChange={(e) => handleRepsChange(index, e.target.value)}
-            className="reps-input w-1/4 bg-gray-300 rounded-md px-2 py-1"
+            className={`reps-input w-1/5 ${inputClass} rounded-md px-2 py-1 mx-4`}
             placeholder="Reps"
           />
         </div>
