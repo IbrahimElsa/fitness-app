@@ -2,10 +2,9 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faHistory, faPlus, faDumbbell, faPerson } from '@fortawesome/free-solid-svg-icons';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+
 
 const MobileNavbar = () => {
-  const { currentUser } = useAuth();
 
   return (
     <div className="fixed bottom-0 inset-x-0 bg-blue-500 text-white py-2 md:hidden">

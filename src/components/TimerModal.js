@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 
 const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
-  const [selectedTime, setSelectedTime] = useState(null);
-
   useEffect(() => {
     if (timeLeft === 0) {
-      setSelectedTime(null);
       setTimeLeft(null);
     }
 
@@ -23,7 +20,6 @@ const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
 
   const handleTimeSelection = (minutes) => {
     const newTime = minutes * 60;
-    setSelectedTime(newTime);
     setTimeLeft(newTime);
     localStorage.setItem("timeLeft", JSON.stringify(newTime));
     localStorage.setItem("timerStartTime", JSON.stringify(Date.now()));
