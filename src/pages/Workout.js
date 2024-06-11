@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import MobileNavbar from "../components/MobileNavbar";
-import Navbar from "../components/Navbar";
 import { useTheme } from "../components/ThemeContext";
 
 function WorkoutPage() {
@@ -31,7 +30,6 @@ function WorkoutPage() {
 
     return (
         <div className={theme === 'light' ? 'flex flex-col h-screen text-black bg-white' : 'flex flex-col h-screen bg-gray-800 text-white'}>
-            <Navbar />
             <div className="flex-1 flex flex-col justify-between p-4 overflow-y-auto">
                 <h1 className="text-3xl text-center mb-4 font-bold">Workout</h1>
                 <div className="flex-1 flex flex-col justify-center items-center">

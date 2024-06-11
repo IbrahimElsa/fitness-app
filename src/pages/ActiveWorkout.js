@@ -20,7 +20,6 @@ function ActiveWorkout() {
   const { state, setState, clearState } = usePersistedState();
   const { selectedExercises, localExerciseData, startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
-  // Define state for TimerModal and timeLeft
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
     const savedTimeLeft = localStorage.getItem("timeLeft");
@@ -29,10 +28,23 @@ function ActiveWorkout() {
 
   useEffect(() => {
     const savedTimer = localStorage.getItem("timer");
-    if (savedTimer !== null) {
+    const savedStartTime = localStorage.getItem("startTime");
+    const savedIsActive = localStorage.getItem("isActive");
+
+    if (savedStartTime && savedIsActive === "true") {
+      const currentTime = Date.now();
+      const elapsedTime = Math.floor((currentTime - JSON.parse(savedStartTime)) / 1000);
       setState(prevState => ({
         ...prevState,
-        timer: JSON.parse(savedTimer)
+        timer: elapsedTime,
+        startTime: JSON.parse(savedStartTime),
+        isActive: true
+      }));
+    } else if (savedTimer !== null) {
+      setState(prevState => ({
+        ...prevState,
+        timer: JSON.parse(savedTimer),
+        isActive: JSON.parse(savedIsActive)
       }));
     }
   }, [setState]);
@@ -43,7 +55,6 @@ function ActiveWorkout() {
       interval = setInterval(() => {
         setState(prevState => {
           const newTimer = prevState.timer + 1;
-          localStorage.setItem("timer", JSON.stringify(newTimer));
           return {
             ...prevState,
             timer: newTimer
@@ -60,11 +71,25 @@ function ActiveWorkout() {
   }, [isActive, setState]);
 
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.setItem("timer", JSON.stringify(state.timer));
+      localStorage.setItem("isActive", JSON.stringify(isActive));
+      localStorage.setItem("startTime", JSON.stringify(state.startTime));
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isActive, state.timer, state.startTime]);
+
+  useEffect(() => {
     if (location.state?.startTimer) {
+      const currentTime = Date.now();
       setState(prevState => ({
         ...prevState,
         isActive: true,
-        startTime: Date.now()
+        startTime: currentTime
       }));
     }
   }, [location, setState]);
@@ -152,6 +177,7 @@ function ActiveWorkout() {
       clearState();
       localStorage.removeItem("timer");
       localStorage.removeItem("timeLeft");
+      localStorage.removeItem("startTime");
       navigate("/finished-workout");
     } catch (error) {
       console.error("Error adding workout: ", error);
@@ -162,6 +188,7 @@ function ActiveWorkout() {
     clearState();
     localStorage.removeItem("timer");
     localStorage.removeItem("timeLeft");
+    localStorage.removeItem("startTime");
     navigate("/");
   };
 

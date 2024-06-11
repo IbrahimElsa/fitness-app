@@ -18,24 +18,22 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/workout" element={<Workout />} />
-            <Route path="/active-workout" element={
-              <PersistedStateProvider>
-                <ActiveWorkout />
-              </PersistedStateProvider>
-            } />
-            <Route path="/finished-workout" element={<FinishedWorkout />} />
-            <Route path="/exercises" element={<Exercises />} />
-            <Route path="/coach" element={<Coach />} />
-          </Routes>
-        </Router>
+        <PersistedStateProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/workout" element={<Workout />} />
+              <Route path="/active-workout" element={<ActiveWorkout />} />
+              <Route path="/finished-workout" element={<FinishedWorkout />} />
+              <Route path="/exercises" element={<Exercises />} />
+              <Route path="/coach" element={<Coach />} />
+            </Routes>
+          </Router>
+        </PersistedStateProvider>
       </AuthProvider>
     </ThemeProvider>
   );

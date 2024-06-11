@@ -20,22 +20,22 @@ function Home() {
   const [profilePic, setProfilePic] = useState(null);
 
   useEffect(() => {
-    const calculateSundays = () => {
+    const calculatePastSundays = () => {
       const sundays = [];
       let today = new Date();
-      today.setDate(today.getDate() + (7 - today.getDay())); 
+      today.setDate(today.getDate() - today.getDay() + 7); // Set to the upcoming Sunday
       for (let i = 0; i < 6; i++) {
-        sundays.push({
-          date: format(new Date(today), 'MM-dd'), 
+        sundays.unshift({
+          date: format(new Date(today), 'MM-dd'),
           days: Math.floor(Math.random() * 5) + 2 
         });
-        today.setDate(today.getDate() + 7);
+        today.setDate(today.getDate() - 7);
       }
       return sundays;
     };
 
     const updateData = () => {
-      setData(calculateSundays());
+      setData(calculatePastSundays());
     };
 
     updateData();

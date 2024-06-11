@@ -29,12 +29,14 @@ const CustomBarChart = ({ data }) => {
     const { theme } = useTheme();
     const textColor = theme === 'light' ? 'black' : 'white'; // Dynamically set text color based on theme
 
+    const maxDays = Math.max(...data.map(item => item.days));
+
     return (
         <div style={{ width: '100%', height: '40%' }} >
             <ResponsiveContainer>
                 <BarChart data={data} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
                     <XAxis dataKey="date" stroke={textColor} />
-                    <YAxis domain={[0, 7]} allowDecimals={false} stroke={textColor}>
+                    <YAxis domain={[0, maxDays]} allowDecimals={false} stroke={textColor}>
                         <Label value="Days at Gym" offset={0} position="insideLeft" angle={-90} style={{ fill: textColor }} />
                     </YAxis>
                     <Tooltip cursor={{ fill: 'transparent' }} labelStyle={{ color: textColor }} />
