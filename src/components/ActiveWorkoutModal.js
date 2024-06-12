@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useTheme } from "../components/ThemeContext";
+import { db } from "../firebaseConfig";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { useAuth } from "../AuthContext";
 
 const ActiveWorkoutModal = ({
   show,
@@ -11,7 +14,28 @@ const ActiveWorkoutModal = ({
   handleAddExercise,
 }) => {
   const { theme } = useTheme();
+  const { currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [customExerciseName, setCustomExerciseName] = useState("");
+  const [customExerciseCategory, setCustomExerciseCategory] = useState("");
+  const [customExerciseMuscle, setCustomExerciseMuscle] = useState("");
+  const [userExercises, setUserExercises] = useState([]);
+
+  useEffect(() => {
+    const fetchUserExercises = async () => {
+      try {
+        const userId = currentUser.uid;
+        const userExercisesCollectionRef = collection(db, "users", userId, "exercises");
+        const querySnapshot = await getDocs(userExercisesCollectionRef);
+        const exercises = querySnapshot.docs.map(doc => doc.data());
+        setUserExercises(exercises);
+      } catch (error) {
+        console.error("Error fetching user exercises: ", error);
+      }
+    };
+
+    fetchUserExercises();
+  }, [currentUser]);
 
   if (!show) {
     return null;
@@ -27,18 +51,40 @@ const ActiveWorkoutModal = ({
     setSearchQuery(e.target.value);
   };
 
-  const filteredExercises = exercisesData.Exercises.filter((exercise) =>
-    exercise.Name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const handleExerciseSelect = (exercise) => {
     handleAddExercise(exercise);
-    onClose(); // Close the modal after selecting an exercise
+    onClose();
+  };
+
+  const handleAddCustomExercise = async () => {
+    try {
+      const newExercise = {
+        Name: customExerciseName,
+        Category: customExerciseCategory,
+        Muscle: customExerciseMuscle
+      };
+      const userId = currentUser.uid;
+      const userExercisesCollectionRef = collection(db, "users", userId, "exercises");
+
+      await addDoc(userExercisesCollectionRef, newExercise);
+      handleAddExercise(newExercise);
+      onClose();
+    } catch (error) {
+      console.error("Error adding custom exercise: ", error);
+    }
   };
 
   const containerClass = theme === 'light' ? 'bg-white text-gray-800' : 'bg-gray-800 text-white';
   const inputClass = theme === 'light' ? 'bg-gray-200 text-gray-800' : 'bg-gray-700 text-white';
   const itemClass = theme === 'light' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'bg-gray-700 text-white hover:bg-gray-600';
+
+  const allExercises = [...exercisesData.Exercises, ...userExercises];
+  const filteredExercises = allExercises.filter((exercise) =>
+    exercise.Name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const categories = ["Barbell", "Dumbbell", "Smith Machine", "Machine", "Cable", "Bodyweight"];
+  const muscles = ["Chest", "Back", "Legs", "Shoulders", "Triceps", "Biceps", "Abs"];
 
   return ReactDOM.createPortal(
     <div
@@ -69,6 +115,43 @@ const ActiveWorkoutModal = ({
               </li>
             ))}
           </ul>
+          {filteredExercises.length === 0 && (
+            <div className="mt-4">
+              <input
+                type="text"
+                placeholder="Add custom exercise..."
+                value={customExerciseName}
+                onChange={(e) => setCustomExerciseName(e.target.value)}
+                className={`rounded-md px-2 py-1 w-full ${inputClass} mb-2`}
+              />
+              <select
+                value={customExerciseCategory}
+                onChange={(e) => setCustomExerciseCategory(e.target.value)}
+                className={`rounded-md px-2 py-1 w-full ${inputClass} mb-2`}
+              >
+                <option value="">Select Category</option>
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>{category}</option>
+                ))}
+              </select>
+              <select
+                value={customExerciseMuscle}
+                onChange={(e) => setCustomExerciseMuscle(e.target.value)}
+                className={`rounded-md px-2 py-1 w-full ${inputClass} mb-2`}
+              >
+                <option value="">Select Muscle Group</option>
+                {muscles.map((muscle, index) => (
+                  <option key={index} value={muscle}>{muscle}</option>
+                ))}
+              </select>
+              <button
+                className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white w-full"
+                onClick={handleAddCustomExercise}
+              >
+                Add Custom Exercise
+              </button>
+            </div>
+          )}
         </div>
         <button
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"

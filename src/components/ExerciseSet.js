@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { useTheme } from "../components/ThemeContext";
 
 const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
@@ -17,14 +17,16 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
       try {
         const userId = currentUser.uid;
         const workoutsCollectionRef = collection(db, 'users', userId, 'workouts');
-        const q = query(workoutsCollectionRef, orderBy('timestamp', 'desc'), limit(1));
+        const q = query(workoutsCollectionRef, orderBy('timestamp', 'desc'));
         const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const prevWorkout = querySnapshot.docs[0].data();
-          const prevSets = prevWorkout.exercises.find(ex => ex.Name === exercise.Name)?.sets || [];
-          setPrevWorkoutData(prevSets);
-        } else {
-          setPrevWorkoutData([]);
+        
+        for (const doc of querySnapshot.docs) {
+          const workout = doc.data();
+          const prevSets = workout.exercises.find(ex => ex.Name === exercise.Name)?.sets || [];
+          if (prevSets.length > 0) {
+            setPrevWorkoutData(prevSets);
+            break;
+          }
         }
       } catch (error) {
         console.error('Error fetching previous workout data: ', error);
