@@ -3,7 +3,7 @@ import { db } from '../firebaseConfig';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { useTheme } from "../components/ThemeContext";
 
-const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
+const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemoveExercise }) => {
   const [localSets, setLocalSets] = useState(sets);
   const [prevWorkoutData, setPrevWorkoutData] = useState([]);
   const { theme } = useTheme();
@@ -56,6 +56,16 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
     handleSetChange(exercise.Name, localSets.length, 'new', { weight: '', reps: '' });
   };
 
+  const deleteLastSet = () => {
+    if (localSets.length === 1) {
+      handleRemoveExercise(exercise.Name);
+    } else {
+      const newSets = localSets.slice(0, -1);
+      setLocalSets(newSets);
+      handleSetChange(exercise.Name, localSets.length - 1, 'delete');
+    }
+  };
+
   const containerClass = theme === 'light' 
     ? 'bg-gray-200 text-gray-800' 
     : 'bg-gray-800 text-white border-t border-b border-gray-600';
@@ -66,16 +76,17 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
   return (
     <div className={`exercise-set ${containerClass} p-4 rounded-md mb-4`}>
       <h3>{exercise.Name}</h3>
-      <div className="flex items-center mb-2">
-        <h4 className="w-1/4">Set</h4>
-        <h4 className="w-1/4">Prev Workout</h4>
-        <h4 className="w-1/4">Weight</h4>
-        <h4 className="w-1/4">Reps</h4>
+      <div className="grid grid-cols-5 gap-4 mb-2">
+        <h4>Set</h4>
+        <h4>Prev Workout</h4>
+        <h4>Weight</h4>
+        <h4>Reps</h4>
+        <h4></h4> {/* Placeholder for the delete button */}
       </div>
       {localSets.map((set, index) => (
-        <div key={index} className="flex items-center mb-2">
-          <span className="w-1/4">{index + 1}</span>
-          <span className="w-1/4">
+        <div key={index} className="grid grid-cols-5 gap-4 items-center mb-2">
+          <span>{index + 1}</span>
+          <span>
             {prevWorkoutData[index]
               ? `${prevWorkoutData[index].weight} x ${prevWorkoutData[index].reps}`
               : '- x -'}
@@ -84,16 +95,24 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser }) => {
             type="text"
             value={set.weight}
             onChange={(e) => handleWeightChange(index, e.target.value)}
-            className={`weight-input w-1/5 ${inputClass} rounded-md px-2 py-1`}
+            className={`weight-input ${inputClass} rounded-md px-2 py-1`}
             placeholder="Weight"
           />
           <input
             type="text"
             value={set.reps}
             onChange={(e) => handleRepsChange(index, e.target.value)}
-            className={`reps-input w-1/5 ${inputClass} rounded-md px-2 py-1 mx-4`}
+            className={`reps-input ${inputClass} rounded-md px-2 py-1`}
             placeholder="Reps"
           />
+          {index === localSets.length - 1 && (
+            <button
+              onClick={deleteLastSet}
+              className="text-red-600 hover:text-red-800"
+            >
+              X
+            </button>
+          )}
         </div>
       ))}
       <div className="flex justify-center mt-4">

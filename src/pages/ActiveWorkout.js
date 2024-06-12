@@ -135,6 +135,14 @@ function ActiveWorkout() {
     }));
   };
 
+  const handleRemoveExercise = (exerciseName) => {
+    setState(prevState => ({
+      ...prevState,
+      selectedExercises: prevState.selectedExercises.filter(ex => ex.Name !== exerciseName),
+      localExerciseData: prevState.localExerciseData.filter(ex => ex.Name !== exerciseName),
+    }));
+  };
+
   const handleCancelWorkout = () => {
     setState(prevState => ({
       ...prevState,
@@ -207,6 +215,8 @@ function ActiveWorkout() {
 
       if (field === "new") {
         newLocalExerciseData[exerciseIndex].sets.push({ weight: "", reps: "" });
+      } else if (field === "delete") {
+        newLocalExerciseData[exerciseIndex].sets.splice(setIndex, 1);
       } else {
         newLocalExerciseData[exerciseIndex].sets[setIndex][field] = value;
       }
@@ -267,6 +277,7 @@ function ActiveWorkout() {
           exercise={exercise}
           sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
           handleSetChange={handleSetChange}
+          handleRemoveExercise={handleRemoveExercise}
           currentUser={currentUser}
         />
       ))}
