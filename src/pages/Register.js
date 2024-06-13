@@ -1,30 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { register } from '../firebaseAuthServices';
-import { getFirestore, doc, collection, setDoc } from "firebase/firestore";
-import MobileNavbar
- from '../components/MobileNavbar';
+import MobileNavbar from '../components/MobileNavbar';
+
 const RegisterPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const firestore = getFirestore();
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
 
         try {
-            const userCredential = await register(email, password);
-            console.log('User created');
-
-            const userId = userCredential.user.uid;
-            const userDocRef = doc(firestore, `users/${userId}`);
-            const workoutsCollectionRef = collection(userDocRef, 'workouts');
-            const initialWorkoutDocRef = doc(workoutsCollectionRef);
-            await setDoc(initialWorkoutDocRef, { initialized: true });
-
+            const user = await register(email, password);
+            console.log('User created:', user);
             navigate('/');
         } catch (error) {
             setError(error.message);

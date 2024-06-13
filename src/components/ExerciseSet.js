@@ -81,10 +81,15 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
         <h4>Prev Workout</h4>
         <h4>Weight</h4>
         <h4>Reps</h4>
-        <h4></h4> {/* Placeholder for the delete button */}
+        <div></div> {/* Placeholder for the delete button */}
       </div>
       {localSets.map((set, index) => (
-        <div key={index} className="grid grid-cols-5 gap-4 items-center mb-2">
+        <div
+          key={index}
+          className={`grid grid-cols-5 gap-4 items-center mb-2 ${
+            set.weight && set.reps ? 'bg-green-200' : ''
+          }`}
+        >
           <span>{index + 1}</span>
           <span>
             {prevWorkoutData[index]
@@ -97,6 +102,8 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             onChange={(e) => handleWeightChange(index, e.target.value)}
             className={`weight-input ${inputClass} rounded-md px-2 py-1`}
             placeholder="Weight"
+            inputMode="numeric"
+            pattern="[0-9]*"
           />
           <input
             type="text"
@@ -104,6 +111,8 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             onChange={(e) => handleRepsChange(index, e.target.value)}
             className={`reps-input ${inputClass} rounded-md px-2 py-1`}
             placeholder="Reps"
+            inputMode="numeric"
+            pattern="[0-9]*"
           />
           {index === localSets.length - 1 && (
             <button
