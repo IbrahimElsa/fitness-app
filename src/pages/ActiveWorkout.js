@@ -27,7 +27,6 @@ function ActiveWorkout() {
   });
 
   useEffect(() => {
-    const savedTimer = localStorage.getItem("timer");
     const savedStartTime = localStorage.getItem("startTime");
     const savedIsActive = localStorage.getItem("isActive");
 
@@ -38,13 +37,7 @@ function ActiveWorkout() {
         ...prevState,
         timer: elapsedTime,
         startTime: JSON.parse(savedStartTime),
-        isActive: true
-      }));
-    } else if (savedTimer !== null) {
-      setState(prevState => ({
-        ...prevState,
-        timer: JSON.parse(savedTimer),
-        isActive: JSON.parse(savedIsActive)
+        isActive: true,
       }));
     }
   }, [setState]);
@@ -55,9 +48,12 @@ function ActiveWorkout() {
       interval = setInterval(() => {
         setState(prevState => {
           const newTimer = prevState.timer + 1;
+          localStorage.setItem("timer", JSON.stringify(newTimer));
+          localStorage.setItem("isActive", JSON.stringify(isActive));
+          localStorage.setItem("startTime", JSON.stringify(prevState.startTime));
           return {
             ...prevState,
-            timer: newTimer
+            timer: newTimer,
           };
         });
       }, 1000);
@@ -84,13 +80,16 @@ function ActiveWorkout() {
   }, [isActive, state.timer, state.startTime]);
 
   useEffect(() => {
-    if (location.state?.startTimer) {
+    const savedStartTime = localStorage.getItem("startTime");
+    if (location.state?.startTimer && !savedStartTime) {
       const currentTime = Date.now();
       setState(prevState => ({
         ...prevState,
         isActive: true,
-        startTime: currentTime
+        startTime: currentTime,
       }));
+      localStorage.setItem("startTime", JSON.stringify(currentTime));
+      localStorage.setItem("isActive", JSON.stringify(true));
     }
   }, [location, setState]);
 
@@ -109,14 +108,14 @@ function ActiveWorkout() {
   const openActiveWorkoutModal = () => {
     setState(prevState => ({
       ...prevState,
-      showActiveWorkoutModal: true
+      showActiveWorkoutModal: true,
     }));
   };
 
   const closeActiveWorkoutModal = () => {
     setState(prevState => ({
       ...prevState,
-      showActiveWorkoutModal: false
+      showActiveWorkoutModal: false,
     }));
   };
 
@@ -131,7 +130,7 @@ function ActiveWorkout() {
       ...prevState,
       selectedExercises: [...prevState.selectedExercises, exercise],
       localExerciseData: [...prevState.localExerciseData, newExercise],
-      showActiveWorkoutModal: false
+      showActiveWorkoutModal: false,
     }));
   };
 
@@ -146,7 +145,7 @@ function ActiveWorkout() {
   const handleCancelWorkout = () => {
     setState(prevState => ({
       ...prevState,
-      showCancelModal: true
+      showCancelModal: true,
     }));
   };
 
@@ -160,9 +159,9 @@ function ActiveWorkout() {
       const endTime = Date.now();
       const durationInMilliseconds = endTime - startTime;
       const durationInSeconds = Math.floor(durationInMilliseconds / 1000);
-      const durationString = `${Math.floor(durationInSeconds / 3600)}:${Math.floor(
+      const durationString = `${Math.floor(durationInSeconds / 3600).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${Math.floor(
         (durationInSeconds % 3600) / 60
-      )}:${durationInSeconds % 60}`;
+      ).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${(durationInSeconds % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
 
       const workoutData = {
         duration: durationString,
@@ -223,7 +222,7 @@ function ActiveWorkout() {
 
       return {
         ...prevState,
-        localExerciseData: newLocalExerciseData
+        localExerciseData: newLocalExerciseData,
       };
     });
   };
@@ -239,7 +238,7 @@ function ActiveWorkout() {
       <div className="w-full flex justify-between p-4">
         <button
           className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
-          onClick={() => setIsTimerModalOpen(true)} // Open the TimerModal when clicked
+          onClick={() => setIsTimerModalOpen(true)}
         >
           {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
         </button>
@@ -309,7 +308,7 @@ function ActiveWorkout() {
       {showCancelModal && (
         <CancelModal onConfirm={confirmCancelWorkout} onClose={() => setState(prevState => ({
           ...prevState,
-          showCancelModal: false
+          showCancelModal: false,
         }))} />
       )}
       <MobileNavbar />
@@ -318,7 +317,7 @@ function ActiveWorkout() {
         onClose={() => setIsTimerModalOpen(false)}
         timeLeft={timeLeft}
         setTimeLeft={setTimeLeft}
-      /> {/* Add TimerModal */}
+      />
     </div>
   );
 }

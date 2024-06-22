@@ -52,7 +52,7 @@ const FinishedWorkout = () => {
         <h2 className="text-xl mb-2">Duration: {workoutData.duration}</h2>
         <div className={`w-11/12 max-w-xl ${summaryClass} p-4 rounded-md mb-4`}>
           {workoutData.exercises.map((exercise, index) => (
-            <div key={index} className="exercise-set ">
+            <div key={index} className="exercise-set">
               <h3 className="text-xl font-bold">{exercise.Name}</h3>
               <div className="flex items-center mb-2 font-semibold text-lg">
                 <h4 className="w-1/4">Set</h4>
