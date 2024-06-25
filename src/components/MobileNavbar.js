@@ -1,10 +1,10 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faHistory, faPlus, faDumbbell, faPerson } from '@fortawesome/free-solid-svg-icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { usePersistedState } from './PersistedStateProvider'; // Adjust the import path as needed
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, History, PlusCircle, Dumbbell, User } from 'lucide-react';
+import { usePersistedState } from './PersistedStateProvider';
 
 const MobileNavbar = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { state } = usePersistedState();
   const { isActive } = state;
@@ -17,31 +17,48 @@ const MobileNavbar = () => {
     }
   };
 
+  const navItems = [
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: History, label: 'History', path: '/history' },
+    { icon: PlusCircle, label: 'Workout', path: '/workout', onClick: handleWorkoutClick },
+    { icon: Dumbbell, label: 'Exercises', path: '/exercises' },
+    { icon: User, label: 'Coach', path: '/coach' },
+  ];
+
   return (
-    <div className="fixed bottom-0 inset-x-0 bg-blue-500 text-white py-2 md:hidden">
-      <div className="flex justify-between">
-        <Link to="/" className="flex flex-col items-center w-full">
-          <FontAwesomeIcon icon={faHome} size="lg" />
-          <span className="text-xs">Home</span>
-        </Link>
-        <Link to="/history" className="flex flex-col items-center w-full">
-          <FontAwesomeIcon icon={faHistory} size="lg" />
-          <span className="text-xs">History</span>
-        </Link>
-        <button onClick={handleWorkoutClick} className="flex flex-col items-center w-full">
-          <FontAwesomeIcon icon={faPlus} size="lg" />
-          <span className="text-xs">Workout</span>
-        </button>
-        <Link to="/exercises" className="flex flex-col items-center w-full">
-          <FontAwesomeIcon icon={faDumbbell} size="lg" />
-          <span className="text-xs">Exercises</span>
-        </Link>
-        <Link to="/coach" className="flex flex-col items-center w-full">
-          <FontAwesomeIcon icon={faPerson} size="lg" />
-          <span className="text-xs">Coach</span>
-        </Link>
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg">
+      <div className="flex justify-around items-center h-16">
+        {navItems.map((item) => (
+          item.onClick ? (
+            <button
+              key={item.path}
+              onClick={item.onClick}
+              className={`flex flex-col items-center justify-center w-full h-full ${
+                location.pathname === item.path
+                  ? 'text-blue-500 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              <item.icon size={24} />
+              <span className="text-xs mt-1">{item.label}</span>
+            </button>
+          ) : (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center justify-center w-full h-full ${
+                location.pathname === item.path
+                  ? 'text-blue-500 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              <item.icon size={24} />
+              <span className="text-xs mt-1">{item.label}</span>
+            </Link>
+          )
+        ))}
       </div>
-    </div>
+    </nav>
   );
 };
 
