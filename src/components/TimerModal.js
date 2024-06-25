@@ -1,28 +1,37 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 
 const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
+  const intervalRef = useRef(null);
+
   useEffect(() => {
     if (timeLeft === 0) {
       setTimeLeft(null);
     }
 
-    if (timeLeft > 0) {
-      const timerId = setInterval(() => {
+    if (timeLeft > 0 && intervalRef.current === null) {
+      intervalRef.current = setInterval(() => {
         setTimeLeft((prevTimeLeft) => {
           const newTime = prevTimeLeft - 1;
           localStorage.setItem("timeLeft", JSON.stringify(newTime));
           return newTime;
         });
       }, 1000);
-      return () => clearInterval(timerId);
     }
+
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [timeLeft, setTimeLeft]);
 
   const handleTimeSelection = (minutes) => {
     const newTime = minutes * 60;
     setTimeLeft(newTime);
+    const startTime = Date.now();
     localStorage.setItem("timeLeft", JSON.stringify(newTime));
-    localStorage.setItem("timerStartTime", JSON.stringify(Date.now()));
+    localStorage.setItem("startTime", JSON.stringify(startTime)); // Update the start time only when a new countdown is started
   };
 
   const adjustTime = (seconds) => {
@@ -41,10 +50,10 @@ const TimerModal = ({ isOpen, onClose, setTimeLeft, timeLeft }) => {
 
   useEffect(() => {
     const savedTimeLeft = localStorage.getItem("timeLeft");
-    const timerStartTime = localStorage.getItem("timerStartTime");
+    const savedStartTime = localStorage.getItem("startTime");
 
-    if (savedTimeLeft && timerStartTime) {
-      const elapsedTime = Math.floor((Date.now() - JSON.parse(timerStartTime)) / 1000);
+    if (savedTimeLeft && savedStartTime) {
+      const elapsedTime = Math.floor((Date.now() - JSON.parse(savedStartTime)) / 1000);
       const newTimeLeft = JSON.parse(savedTimeLeft) - elapsedTime;
 
       if (newTimeLeft > 0) {
