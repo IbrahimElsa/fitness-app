@@ -66,8 +66,8 @@ function Home() {
   return (
     <div className={`${themeCss[theme]}`}>
       <Navbar />
-      <div className="flex flex-col h-screen">
-        <div className="px-4 py-2 flex justify-between items-center w-full">
+      <div className="flex flex-col h-screen items-center"> {/* Center content horizontally */}
+        <div className="px-4 py-2 flex justify-between items-center w-full max-w-3xl"> {/* Add max width */}
           <h1 className="text-3xl pt-12 pl-6 font-bold">Home</h1>
           {currentUser ? (
             <div className="relative">
@@ -112,7 +112,7 @@ function Home() {
             </button>
           )}
         </div>
-        <div className="flex flex-col items-center flex-1 p-4 mt-10">
+        <div className="flex flex-col items-center flex-1 w-full max-w-3xl p-4 mt-10"> {/* Center content and add max width */}
           <CustomBarChart data={data} />
         </div>
       </div>
