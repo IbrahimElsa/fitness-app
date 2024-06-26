@@ -7,8 +7,8 @@ import { useAuth } from "../AuthContext";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
-import { format } from 'date-fns';
-import { getDoc, doc } from 'firebase/firestore';
+import { format, startOfWeek, subWeeks } from 'date-fns';
+import { getDocs, collection, query, getDoc, doc } from 'firebase/firestore';
 import { db } from "../firebaseConfig";
 
 function Home() {
@@ -20,32 +20,48 @@ function Home() {
   const [profilePic, setProfilePic] = useState(null);
 
   useEffect(() => {
-    const calculatePastSundays = () => {
-      const sundays = [];
-      let today = new Date();
-      today.setDate(today.getDate() - today.getDay() + 7); // Set to the upcoming Sunday
-      for (let i = 0; i < 6; i++) {
-        sundays.unshift({
-          date: format(new Date(today), 'MM-dd'),
-          days: Math.floor(Math.random() * 5) + 2 
-        });
-        today.setDate(today.getDate() - 7);
-      }
-      return sundays;
+    const fetchWorkouts = async () => {
+      if (!currentUser) return;
+
+      const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
+      const q = query(workoutsRef);
+
+      const snapshot = await getDocs(q);
+      const workouts = snapshot.docs.map(doc => {
+        const workoutData = doc.data();
+        return {
+          ...workoutData,
+          date: workoutData.timestamp && workoutData.timestamp.toDate ? workoutData.timestamp.toDate() : new Date(workoutData.timestamp),
+        };
+      });
+
+      const calculateWeeklyGymVisits = () => {
+        const sundays = [];
+        let today = new Date();
+        const startOfThisWeek = startOfWeek(today, { weekStartsOn: 0 }); // Sunday as the start of the week
+
+        for (let i = 0; i < 6; i++) {
+          const weekStart = subWeeks(startOfThisWeek, i);
+          const weekEnd = subWeeks(startOfThisWeek, i - 1);
+
+          const visits = workouts.filter(workout =>
+            workout.date >= weekStart && workout.date < weekEnd
+          ).length;
+
+          sundays.unshift({
+            date: format(weekStart, 'MM-dd'),
+            days: visits,
+          });
+        }
+
+        return sundays;
+      };
+
+      setData(calculateWeeklyGymVisits());
     };
 
-    const updateData = () => {
-      setData(calculatePastSundays());
-    };
-
-    updateData();
-
-    const intervalId = setInterval(() => {
-      updateData(); // Update every week
-    }, 604800000); // 604800000 ms in a week
-
-    return () => clearInterval(intervalId);
-  }, []);
+    fetchWorkouts();
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchProfilePic = async () => {
