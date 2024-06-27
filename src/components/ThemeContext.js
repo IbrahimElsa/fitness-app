@@ -4,20 +4,22 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('light');
 
-const toggleTheme = () => {
+  const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
-};
+  };
 
-const themeCss = {
-    light: 'bg-gray-200 text-black',
-    dark: 'bg-gray-800 text-white',
-};
+  const themeCss = {
+    light: 'bg-gray-100 text-black',
+    dark: 'bg-gray-900 text-white',
+    navbarLight: 'bg-gray-200 text-black',
+    navbarDark: 'bg-gray-800 text-white',
+  };
 
-return (
+  return (
     <ThemeContext.Provider value={{ theme, toggleTheme, themeCss }}>
-        {children}
+      {children}
     </ThemeContext.Provider>
-    );
+  );
 };

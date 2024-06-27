@@ -2,12 +2,14 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, History, PlusCircle, Dumbbell, User } from 'lucide-react';
 import { usePersistedState } from './PersistedStateProvider';
+import { useTheme } from './ThemeContext';
 
 const MobileNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = usePersistedState();
   const { isActive } = state;
+  const { theme, themeCss } = useTheme();
 
   const handleWorkoutClick = () => {
     if (isActive) {
@@ -26,7 +28,7 @@ const MobileNavbar = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg">
+    <nav className={`fixed bottom-0 left-0 right-0 ${theme === 'light' ? themeCss.navbarLight : themeCss.navbarDark} shadow-lg`}>
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => (
           item.onClick ? (
@@ -35,8 +37,8 @@ const MobileNavbar = () => {
               onClick={item.onClick}
               className={`flex flex-col items-center justify-center w-full h-full ${
                 location.pathname === item.path
-                  ? 'text-blue-500 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-blue-500'
+                  : 'text-gray-500'
               }`}
             >
               <item.icon size={24} />
@@ -48,8 +50,8 @@ const MobileNavbar = () => {
               to={item.path}
               className={`flex flex-col items-center justify-center w-full h-full ${
                 location.pathname === item.path
-                  ? 'text-blue-500 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-blue-500'
+                  : 'text-gray-500'
               }`}
             >
               <item.icon size={24} />

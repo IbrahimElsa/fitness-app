@@ -19,7 +19,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
         const workoutsCollectionRef = collection(db, 'users', userId, 'workouts');
         const q = query(workoutsCollectionRef, orderBy('timestamp', 'desc'));
         const querySnapshot = await getDocs(q);
-        
+
         for (const doc of querySnapshot.docs) {
           const workout = doc.data();
           const prevSets = workout.exercises.find(ex => ex.Name === exercise.Name)?.sets || [];
@@ -68,15 +68,15 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
 
   const containerClass = theme === 'light' 
     ? 'bg-gray-200 text-gray-800' 
-    : 'bg-gray-800 text-white border-t border-b border-gray-600';
+    : 'bg-gray-700 text-white border-t border-b border-gray-600';
   const inputClass = theme === 'light' 
     ? 'bg-gray-300 text-black' 
     : 'bg-gray-600 text-white';
 
   return (
-    <div className={`exercise-set ${containerClass} p-4 rounded-md mb-4`}>
-      <h3>{exercise.Name}</h3>
-      <div className="grid grid-cols-5 gap-4 mb-2">
+    <div className={`exercise-set ${containerClass} p-4 rounded-lg shadow-md mb-4`}>
+      <h3 className="text-xl font-semibold mb-4">{exercise.Name}</h3>
+      <div className='grid grid-cols-5 gap-4 mb-2 text-sm font-medium'>
         <h4>Set</h4>
         <h4>Prev Workout</h4>
         <h4>Weight</h4>
@@ -86,11 +86,13 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
       {localSets.map((set, index) => (
         <div
           key={index}
-          className={`grid grid-cols-5 gap-4 items-center mb-2 ${
-            set.weight && set.reps ? 'bg-green-200' : ''
+          className={`grid grid-cols-5 gap-4 items-center mb-2 p-2 rounded-md ${
+            set.weight && set.reps 
+              ? theme === 'light' ? 'bg-green-100' : 'bg-green-800'
+              : theme === 'light' ? 'bg-gray-50' : 'bg-gray-900'
           }`}
         >
-          <span>{index + 1}</span>
+          <span className="font-medium">{index + 1}</span>
           <span>
             {prevWorkoutData[index]
               ? `${prevWorkoutData[index].weight} x ${prevWorkoutData[index].reps}`
@@ -100,7 +102,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             type="text"
             value={set.weight}
             onChange={(e) => handleWeightChange(index, e.target.value)}
-            className={`weight-input ${inputClass} rounded-md px-2 py-1`}
+            className={`weight-input ${inputClass} rounded-md px-2 py-1 border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             placeholder="Weight"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -109,7 +111,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             type="text"
             value={set.reps}
             onChange={(e) => handleRepsChange(index, e.target.value)}
-            className={`reps-input ${inputClass} rounded-md px-2 py-1`}
+            className={`reps-input ${inputClass} rounded-md px-2 py-1 border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             placeholder="Reps"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -117,7 +119,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
           {index === localSets.length - 1 && (
             <button
               onClick={deleteLastSet}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 transition duration-150 ease-in-out"
             >
               X
             </button>
@@ -127,7 +129,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
       <div className="flex justify-center mt-4">
         <button
           onClick={addSet}
-          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+          className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
         >
           Add Set
         </button>

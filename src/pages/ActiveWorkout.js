@@ -199,7 +199,7 @@ function ActiveWorkout() {
     navigate("/");
   };
 
-  const containerClass = theme === "light" ? "bg-white text-black" : "bg-gray-800 text-white";
+  const containerClass = theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white";
 
   const handleSetChange = (exerciseName, setIndex, field, value) => {
     setState(prevState => {
@@ -235,20 +235,20 @@ function ActiveWorkout() {
 
   return (
     <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}>
-      <div className="w-full flex justify-between p-4">
+      <div className={`w-full flex justify-between p-4 ${theme === 'light' ? 'bg-white' : 'bg-gray-800'} shadow-md`}>
         <button
-          className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+          className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
           onClick={() => setIsTimerModalOpen(true)}
         >
           {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
         </button>
-        <div className="timer-display text-center text-lg">
+        <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>
           {timer >= 3600 && `${Math.floor(timer / 3600)}:`}
           {Math.floor((timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
           {(timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
         </div>
         <button
-          className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none rounded text-white"
+          className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
           onClick={handleFinishWorkout}
         >
           FINISH
