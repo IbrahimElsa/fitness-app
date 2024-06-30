@@ -74,14 +74,14 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
     : 'bg-gray-600 text-white';
 
   return (
-    <div className={`exercise-set ${containerClass} p-4 rounded-lg shadow-md mb-4`}>
+    <div className={`exercise-set ${containerClass} p-4 rounded-lg shadow-md m-3`}>
       <h3 className="text-xl font-semibold mb-4">{exercise.Name}</h3>
       <div className='grid grid-cols-5 gap-4 mb-2 text-sm font-medium'>
         <h4>Set</h4>
         <h4>Prev Workout</h4>
         <h4>Weight</h4>
         <h4>Reps</h4>
-        <div></div> {/* Placeholder for the delete button */}
+        <div></div> 
       </div>
       {localSets.map((set, index) => (
         <div
@@ -119,7 +119,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
           {index === localSets.length - 1 && (
             <button
               onClick={deleteLastSet}
-              className="text-red-600 hover:text-red-800 transition duration-150 ease-in-out"
+              className="text-red-600 hover:text-red-800 transition duration-150 ease-in-out pl-3 border-2"
             >
               X
             </button>

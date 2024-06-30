@@ -1,0 +1,120 @@
+
+/* Light theme styles */
+.light-theme .react-calendar {
+  background-color: white;
+  color: #333;
+}
+
+.light-theme .react-calendar__tile {
+  color: #333;
+}
+
+.light-theme .react-calendar__tile--now {
+  background: #ffcc00;
+  color: black;
+}
+
+.light-theme .react-calendar__tile--active {
+  background: #007bff;
+  color: white;
+}
+
+.light-theme .react-calendar__tile--gym-visit {
+  background: #007bff;
+  color: white;
+}
+
+.light-theme .react-calendar__tile--gym-today {
+  background: #28a745;
+  color: white;
+}
+
+.light-theme .react-calendar__navigation {
+  background-color: #f8f9fa;
+}
+
+.light-theme .react-calendar__navigation__label {
+  color: #333;
+  font-weight: bold;
+}
+
+.light-theme .react-calendar__navigation__arrow {
+  color: #333;
+}
+
+/* Dark theme styles */
+.dark-theme .react-calendar {
+  background-color: #333;
+  color: white;
+}
+
+.dark-theme .react-calendar__tile {
+  color: white;
+}
+
+.dark-theme .react-calendar__tile--now {
+  background: #ffe066;
+  color: black;
+}
+
+.dark-theme .react-calendar__tile--active {
+  background: #1a73e8;
+  color: white;
+}
+
+.dark-theme .react-calendar__tile--gym-visit {
+  background: #1a73e8;
+  color: white;
+}
+
+.dark-theme .react-calendar__tile--gym-today {
+  background: #28a745;
+  color: white;
+}
+
+.dark-theme .react-calendar__navigation {
+  background-color: #222;
+}
+
+.dark-theme .react-calendar__navigation button {
+  background-color: #222;
+  color: white;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.dark-theme .react-calendar__navigation__label {
+  color: white;
+  font-weight: bold;
+}
+
+.dark-theme .react-calendar__navigation__arrow {
+  color: white;
+}
+
+/* New styles for immediate feedback on arrow press */
+.dark-theme .react-calendar__navigation button:active {
+  background-color: #444;
+  color: #ddd;
+}
+
+.dark-theme .react-calendar__navigation button:hover {
+  background-color: #333;
+}
+
+.dark-theme .react-calendar__navigation button:focus {
+  outline: none;
+  background-color: #333;
+}
+
+.dark-theme .react-calendar__navigation__label,
+.dark-theme .react-calendar__navigation__prev-button,
+.dark-theme .react-calendar__navigation__next-button {
+  background-color: #222;
+}
+
+/* Ensure arrow buttons maintain their style when active */
+.dark-theme .react-calendar__navigation__prev-button:active,
+.dark-theme .react-calendar__navigation__next-button:active {
+  background-color: #444;
+  color: #ddd;
+}

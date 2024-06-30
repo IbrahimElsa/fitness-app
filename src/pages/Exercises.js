@@ -36,7 +36,7 @@ function ExercisesPage() {
         exercise.Name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const backgroundColor = theme === 'light' ? 'bg-white' : 'bg-gray-800';
+    const backgroundColor = theme === 'light' ? 'bg-white' : 'bg-gray-900';
     const textColor = theme === 'light' ? 'text-gray-900' : 'text-white';
     const cardBackgroundColor = theme === 'light' ? 'bg-white' : 'bg-gray-700';
 

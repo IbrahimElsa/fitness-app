@@ -257,13 +257,13 @@ function ActiveWorkout() {
       {selectedExercises.length === 0 && (
         <div className="flex flex-col items-center">
           <button
-            className="self-center py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+            className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white"
             onClick={openActiveWorkoutModal}
           >
             ADD EXERCISE
           </button>
           <button
-            className="self-center py-2 px-4 bg-red-600 hover:bg-red-700 focus:outline-none rounded text-white mt-4"
+            className="self-center py-2 px-4 w-[45vw] bg-red-600 hover:bg-red-700 focus:outline-none rounded-full text-white mt-4"
             onClick={handleCancelWorkout}
           >
             CANCEL WORKOUT
@@ -283,13 +283,13 @@ function ActiveWorkout() {
       {selectedExercises.length > 0 && (
         <>
           <button
-            className="self-center py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white mt-4"
+            className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white mt-4"
             onClick={openActiveWorkoutModal}
           >
             ADD MORE EXERCISES
           </button>
           <button
-            className="self-center py-2 px-4 bg-red-600 hover:bg-red-700 focus:outline-none rounded text-white mt-4"
+            className="self-center py-2 px-4 w-[45vw] bg-red-600 hover:bg-red-700 focus:outline-none rounded-full text-white mt-4"
             onClick={handleCancelWorkout}
           >
             CANCEL WORKOUT
