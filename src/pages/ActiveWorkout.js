@@ -257,7 +257,7 @@ function ActiveWorkout() {
       {selectedExercises.length === 0 && (
         <div className="flex flex-col items-center">
           <button
-            className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white"
+            className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white mt-4"
             onClick={openActiveWorkoutModal}
           >
             ADD EXERCISE

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../components/ThemeContext";
-import { db } from '../firebaseConfig'; // Ensure you have this export in your firebase config
+import { db } from '../firebaseConfig';
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { useAuth } from "../AuthContext"; // Assumes you have an Auth context
+import { useAuth } from "../AuthContext";
 
 function HistoryPage() {
     const { theme } = useTheme();
@@ -37,7 +37,7 @@ function HistoryPage() {
             const workoutsData = snapshot.docs.map((doc) => {
                 const data = doc.data();
 
-                // Ensure duration is a string
+
                 const formattedDuration = typeof data.duration === 'string'
                     ? data.duration
                     : `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`;
@@ -49,7 +49,7 @@ function HistoryPage() {
                 } else if (timestamp && timestamp.toDate) {
                     date = timestamp.toDate();
                 } else {
-                    date = new Date(timestamp); // Fallback for other formats
+                    date = new Date(timestamp);
                 }
 
                 return {

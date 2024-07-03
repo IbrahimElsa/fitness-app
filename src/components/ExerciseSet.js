@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { useTheme } from "../components/ThemeContext";
+import { X } from 'lucide-react';
 
 const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemoveExercise }) => {
   const [localSets, setLocalSets] = useState(sets);
@@ -76,24 +77,24 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
   return (
     <div className={`exercise-set ${containerClass} p-4 rounded-lg shadow-md m-3`}>
       <h3 className="text-xl font-semibold mb-4">{exercise.Name}</h3>
-      <div className='grid grid-cols-5 gap-4 mb-2 text-sm font-medium'>
-        <h4>Set</h4>
-        <h4>Prev Workout</h4>
-        <h4>Weight</h4>
-        <h4>Reps</h4>
-        <div></div> 
+      <div className='grid grid-cols-12 gap-2 mb-2 text-sm font-medium'>
+        <h4 className="col-span-1 text-center">Set</h4>
+        <h4 className="col-span-4 text-center">Prev Workout</h4>
+        <h4 className="col-span-3 text-center">Weight</h4>
+        <h4 className="col-span-3 text-center">Reps</h4>
+        <div className="col-span-1"></div> 
       </div>
       {localSets.map((set, index) => (
         <div
           key={index}
-          className={`grid grid-cols-5 gap-4 items-center mb-2 p-2 rounded-md ${
+          className={`grid grid-cols-12 gap-2 items-center mb-2 p-2 rounded-md ${
             set.weight && set.reps 
               ? theme === 'light' ? 'bg-green-100' : 'bg-green-800'
               : theme === 'light' ? 'bg-gray-50' : 'bg-gray-900'
           }`}
         >
-          <span className="font-medium">{index + 1}</span>
-          <span>
+          <span className="col-span-1 font-medium text-center">{index + 1}</span>
+          <span className="col-span-4 truncate text-center">
             {prevWorkoutData[index]
               ? `${prevWorkoutData[index].weight} x ${prevWorkoutData[index].reps}`
               : '- x -'}
@@ -102,7 +103,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             type="text"
             value={set.weight}
             onChange={(e) => handleWeightChange(index, e.target.value)}
-            className={`weight-input ${inputClass} rounded-md px-2 py-1 border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+            className={`col-span-3 weight-input ${inputClass} rounded-md px-2 py-1 border focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center`}
             placeholder="Weight"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -111,7 +112,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             type="text"
             value={set.reps}
             onChange={(e) => handleRepsChange(index, e.target.value)}
-            className={`reps-input ${inputClass} rounded-md px-2 py-1 border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+            className={`col-span-3 reps-input ${inputClass} rounded-md px-2 py-1 border focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center`}
             placeholder="Reps"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -119,9 +120,9 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
           {index === localSets.length - 1 && (
             <button
               onClick={deleteLastSet}
-              className="text-red-600 hover:text-red-800 transition duration-150 ease-in-out pl-3 border-2"
+              className="col-span-1 text-red-600 hover:text-red-800 transition duration-150 ease-in-out flex justify-center items-center"
             >
-              X
+              <X size={16} />
             </button>
           )}
         </div>
