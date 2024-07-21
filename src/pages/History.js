@@ -3,7 +3,7 @@ import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../components/ThemeContext";
 import { db } from '../firebaseConfig';
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, startAfter, onSnapshot } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -12,6 +12,8 @@ function HistoryPage() {
     const { currentUser } = useAuth();
     const [workouts, setWorkouts] = useState([]);
     const [expandedWorkouts, setExpandedWorkouts] = useState({});
+    const [lastVisible, setLastVisible] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!currentUser) {
@@ -19,15 +21,21 @@ function HistoryPage() {
             return;
         }
 
+        setLoading(true);
+
         const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
-        const q = query(workoutsRef, orderBy("timestamp", "desc"));
+        const q = query(workoutsRef, orderBy("timestamp", "desc"), limit(10));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
                 console.log("No workouts found in the database.");
                 setWorkouts([]);
+                setLoading(false);
                 return;
             }
+
+            const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+            setLastVisible(lastVisibleDoc);
 
             const workoutsData = snapshot.docs.map((doc) => {
                 const data = doc.data();
@@ -49,12 +57,59 @@ function HistoryPage() {
             });
 
             setWorkouts(workoutsData);
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching workouts:", error);
+            setLoading(false);
         });
 
         return () => unsubscribe();
     }, [currentUser]);
+
+    const loadMoreWorkouts = () => {
+        if (!currentUser || !lastVisible) return;
+
+        setLoading(true);
+
+        const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
+        const q = query(workoutsRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(10));
+
+        onSnapshot(q, (snapshot) => {
+            if (snapshot.empty) {
+                console.log("No more workouts found in the database.");
+                setLoading(false);
+                return;
+            }
+
+            const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+            setLastVisible(lastVisibleDoc);
+
+            const newWorkouts = snapshot.docs.map((doc) => {
+                const data = doc.data();
+                const formattedDuration = typeof data.duration === 'string'
+                    ? data.duration
+                    : `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`;
+
+                const timestamp = data.timestamp;
+                let date = timestamp instanceof Date ? timestamp : 
+                           timestamp && timestamp.toDate ? timestamp.toDate() : 
+                           new Date(timestamp);
+
+                return {
+                    id: doc.id,
+                    duration: formattedDuration,
+                    exercises: data.exercises,
+                    date: date,
+                };
+            });
+
+            setWorkouts(prevWorkouts => [...prevWorkouts, ...newWorkouts]);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching more workouts:", error);
+            setLoading(false);
+        });
+    };
 
     const toggleWorkoutExpansion = (workoutId) => {
         setExpandedWorkouts(prev => ({
@@ -87,7 +142,7 @@ function HistoryPage() {
             : 'from-gray-900 to-transparent';
 
         return (
-            <div className={`workout-item ${themeCss[theme]} shadow-md rounded-lg p-4 mb-4 w-11/12 relative`}>
+            <div className={`workout-item ${themeCss[theme]} shadow-md rounded-lg p-4 mb-4 w-11/12 relative ${theme === 'dark' ? themeCss.outlineDark : themeCss.outlineLight}`}>
                 <div 
                     ref={contentRef} 
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-full' : 'max-h-[33vh]'}`}
@@ -130,12 +185,12 @@ function HistoryPage() {
     };
 
     return (
-        <div className={`history-page ${themeCss[theme]}`}>
+        <div className={`history-page ${themeCss[theme]} flex flex-col min-h-screen relative`}>
             <Navbar />
             <div className="w-full flex justify-between items-center p-4">
                 <h1 className="text-xl font-bold text-right">History</h1>
             </div>
-            <div className="flex flex-col items-center justify-center min-h-screen pt-10">
+            <div className="flex flex-col items-center justify-center flex-grow pt-10 pb-20"> {/* Adjust bottom padding */}
                 {workouts.length > 0 ? (
                     workouts.map((workout) => (
                         <WorkoutItem key={workout.id} workout={workout} />
@@ -143,8 +198,17 @@ function HistoryPage() {
                 ) : (
                     <p>No workouts found</p>
                 )}
-                <MobileNavbar />
+                {loading && <p>Loading...</p>}
+                {!loading && lastVisible && (
+                    <button 
+                        onClick={loadMoreWorkouts} 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+                    >
+                        Load More
+                    </button>
+                )}
             </div>
+            <MobileNavbar className="absolute bottom-0 left-0 right-0" /> {/* Ensure MobileNavbar is absolute */}
         </div>
     );
 }

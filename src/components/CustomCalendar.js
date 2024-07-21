@@ -39,6 +39,7 @@ const CustomCalendar = ({ gymVisits }) => {
           prev2Label={null}
           minDetail="month"
           maxDetail="month"
+          calendarType="gregory"
           navigationLabel={({ date }) => 
             <span className="react-calendar__navigation__label text-lg font-semibold">
               {date.toLocaleString('default', { month: 'long', year: 'numeric' })}

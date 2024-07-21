@@ -29,7 +29,7 @@ function WorkoutPage() {
     };
 
     return (
-        <div className={theme === 'light' ? 'flex flex-col h-screen text-black bg-white' : 'flex flex-col h-screen bg-gray-800 text-white'}>
+        <div className={theme === 'light' ? 'flex flex-col h-screen text-black bg-white' : 'flex flex-col h-screen bg-gray-900 text-white'}>
             <div className="flex-1 flex flex-col justify-between p-4 overflow-y-auto">
                 <h1 className="text-3xl text-center mb-4 font-bold">Workout</h1>
                 <div className="flex-1 flex flex-col justify-center items-center">

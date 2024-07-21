@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
 import CancelModal from "../components/CancelModal";
@@ -26,11 +26,9 @@ function ActiveWorkout() {
     return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
   });
 
-  const reinitializeState = useCallback(() => {
+  useEffect(() => {
     const savedStartTime = localStorage.getItem("startTime");
     const savedIsActive = localStorage.getItem("isActive");
-    const savedSelectedExercises = localStorage.getItem("selectedExercises");
-    const savedLocalExerciseData = localStorage.getItem("localExerciseData");
 
     if (savedStartTime && savedIsActive === "true") {
       const currentTime = Date.now();
@@ -40,27 +38,9 @@ function ActiveWorkout() {
         timer: elapsedTime,
         startTime: JSON.parse(savedStartTime),
         isActive: true,
-        selectedExercises: savedSelectedExercises ? JSON.parse(savedSelectedExercises) : [],
-        localExerciseData: savedLocalExerciseData ? JSON.parse(savedLocalExerciseData) : [],
       }));
     }
   }, [setState]);
-
-  useEffect(() => {
-    reinitializeState();
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        reinitializeState();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [reinitializeState]);
 
   useEffect(() => {
     let interval = null;
@@ -91,15 +71,13 @@ function ActiveWorkout() {
       localStorage.setItem("timer", JSON.stringify(state.timer));
       localStorage.setItem("isActive", JSON.stringify(isActive));
       localStorage.setItem("startTime", JSON.stringify(state.startTime));
-      localStorage.setItem("selectedExercises", JSON.stringify(state.selectedExercises));
-      localStorage.setItem("localExerciseData", JSON.stringify(state.localExerciseData));
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [isActive, state]);
+  }, [isActive, state.timer, state.startTime]);
 
   useEffect(() => {
     const savedStartTime = localStorage.getItem("startTime");
