@@ -28,7 +28,7 @@ const MobileNavbar = () => {
   ];
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 ${theme === 'light' ? themeCss.navbarLight : themeCss.navbarDark} shadow-lg`}>
+    <nav className={`fixed bottom-0 left-0 right-0 ${theme === 'light' ? themeCss.navbarLight : themeCss.navbarDark} shadow-lg md:hidden`}>
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => (
           item.onClick ? (

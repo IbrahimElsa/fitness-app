@@ -29,11 +29,11 @@ const CustomCalendar = ({ gymVisits }) => {
   };
 
   return (
-    <div className={`w-full flex justify-center p-4 ${theme === 'light' ? 'light-theme' : 'dark-theme'}`}>
-      <div className="w-full max-w-md">
+    <div className={`w-full flex justify-center ${theme === 'light' ? 'light-theme' : 'dark-theme'}`}>
+      <div className="w-full max-w-[100vw] px-4">
         <Calendar
           tileClassName={tileClassName}
-          className="shadow-lg rounded-lg border-none"
+          className="shadow-lg rounded-lg border-none w-full max-w-md mx-auto"
           formatShortWeekday={(locale, date) => ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.getDay()]}
           next2Label={null}
           prev2Label={null}

@@ -71,8 +71,8 @@ function Home() {
   return (
     <div className={`${themeCss[theme]} min-h-screen flex flex-col`}>
       <Navbar />
-      <div className="flex flex-col h-full items-center"> {/* Center content horizontally */}
-        <div className="px-4 py-2 flex justify-between items-center w-full max-w-3xl"> {/* Add max width */}
+      <div className="flex flex-col h-full items-center">
+        <div className="px-4 py-2 flex justify-between items-center w-full max-w-3xl">
           <h1 className="text-3xl pt-12 pl-6 font-bold">Home</h1>
           {currentUser ? (
             <div className="relative" ref={dropdownRef}>
@@ -117,8 +117,10 @@ function Home() {
             </button>
           )}
         </div>
-        <div className="flex flex-col items-center flex-1 w-full max-w-3xl p-4 mt-10"> {/* Center content and add max width */}
-          <CustomCalendar gymVisits={gymVisits} />
+        <div className="flex items-center justify-center w-full p-8 mt-10">
+          <div className=" max-w-md mx-auto">
+            <CustomCalendar gymVisits={gymVisits} />
+          </div>
         </div>
       </div>
       <MobileNavbar />
