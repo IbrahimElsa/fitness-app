@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
+import { useTheme } from "../components/ThemeContext";
 
 const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
+  const { theme, themeCss } = useTheme();
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -70,15 +72,15 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50"
+      className={`fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 ${themeCss[theme]}`}
       onClick={onClose}
     >
       <div
-        className="bg-white p-4 rounded shadow-lg max-w-sm w-full h-2/3 flex flex-col justify-between"
+        className={`p-4 rounded shadow-lg max-w-sm w-full h-2/3 flex flex-col justify-between ${theme === 'light' ? 'bg-white' : 'bg-gray-800'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-semibold mb-4 text-center">Select Timer</h2>
-        <div className="timer-display text-center text-4xl mb-4">
+        <h2 className={`text-xl font-semibold mb-4 text-center ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Select Timer</h2>
+        <div className={`timer-display text-center text-4xl mb-4 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
           {formatTime(timeLeft)}
         </div>
         <div className="flex flex-col justify-end space-y-4">
@@ -96,11 +98,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
               : [-30, -15, 15, 30].map((sec) => (
                   <button
                     key={sec}
-                    className={`timer-button py-2 px-4 ${
-                      sec < 0 ? "bg-red-500" : "bg-green-500"
-                    } text-white rounded hover:${
-                      sec < 0 ? "bg-red-600" : "bg-green-600"
-                    }`}
+                    className={`timer-button py-2 px-4 ${sec < 0 ? "bg-red-500" : "bg-green-500"} text-white rounded hover:${sec < 0 ? "bg-red-600" : "bg-green-600"}`}
                     onClick={() => adjustTime(sec)}
                   >
                     {sec < 0 ? sec : `+${sec}`}
