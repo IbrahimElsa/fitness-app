@@ -5,7 +5,7 @@ import MobileNavbar from "../components/MobileNavbar";
 import { useAuth } from "../AuthContext";
 import DeleteAccModal from "../components/DeleteAccModal";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { faUserCircle, faPencilAlt } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
 import { doc, deleteDoc, collection, getDocs, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -20,6 +20,7 @@ function Profile() {
     const [error, setError] = useState('');
     const [profilePic, setProfilePic] = useState(null);
     const { theme } = useTheme();
+    const [showPencil, setShowPencil] = useState(false);
 
     useEffect(() => {
         const fetchProfilePic = async () => {
@@ -86,6 +87,14 @@ function Profile() {
         await deleteUserAndData(password);
     };
 
+    const handleProfilePicClick = () => {
+        if (showPencil) {
+            document.getElementById('profilePicInput').click();
+        } else {
+            setShowPencil(true);
+        }
+    };
+
     const handleProfilePicChange = async (e) => {
         if (e.target.files[0]) {
             const file = e.target.files[0];
@@ -94,6 +103,7 @@ function Profile() {
             const downloadURL = await getDownloadURL(storageRef);
             await updateDoc(doc(db, "users", currentUser.uid), { profilePic: downloadURL });
             setProfilePic(downloadURL);
+            setShowPencil(false); // Hide the pencil icon after changing the profile picture
         }
     };
 
@@ -108,29 +118,34 @@ function Profile() {
                     <h1 className="text-3xl pt-12 pl-6">Profile</h1>
                     
                     <div className="flex flex-col justify-center items-center flex-1">
-                        <div className="w-full flex justify-center relative">
+                        <div className="relative w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 mt-12 mb-10" onClick={handleProfilePicClick}>
                             {profilePic ? (
                                 <img 
-                                src={profilePic} 
-                                alt="Profile" 
-                                className="rounded-full w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 mt-12 mb-10 object-cover cursor-pointer"
-                                onClick={() => document.getElementById('profilePicInput').click()}
-                            />
-                        ) : (
-                            <FontAwesomeIcon 
-                                icon={faUserCircle} 
-                                size="9x" 
-                                className={`mt-12 ${textColor} pb-10 cursor-pointer`} 
-                                onClick={() => document.getElementById('profilePicInput').click()}
-                            />
-                        )}
-                            <input 
-                                type="file" 
-                                id="profilePicInput" 
-                                style={{ display: 'none' }} 
-                                onChange={handleProfilePicChange}
-                            />
+                                    src={profilePic} 
+                                    alt="Profile" 
+                                    className="rounded-full w-full h-full object-cover cursor-pointer"
+                                />
+                            ) : (
+                                <FontAwesomeIcon 
+                                    icon={faUserCircle} 
+                                    className={`w-full h-full ${textColor} cursor-pointer`} 
+                                />
+                            )}
+                            {showPencil && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                                    <FontAwesomeIcon 
+                                        icon={faPencilAlt} 
+                                        className="text-white text-3xl" 
+                                    />
+                                </div>
+                            )}
                         </div>
+                        <input 
+                            type="file" 
+                            id="profilePicInput" 
+                            className="hidden" 
+                            onChange={handleProfilePicChange}
+                        />
                         <button
                             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4"
                             onClick={handleLogout}
