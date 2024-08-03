@@ -21,6 +21,7 @@ function Profile() {
     const [profilePic, setProfilePic] = useState(null);
     const { theme } = useTheme();
     const [showPencil, setShowPencil] = useState(false);
+    const [confirmText, setConfirmText] = useState('');
 
     useEffect(() => {
         const fetchProfilePic = async () => {
@@ -44,18 +45,27 @@ function Profile() {
         }
     };
 
-    const deleteUserAndData = async (password) => {
+    const deleteUserAndData = async (password, confirmText) => {
         if (!currentUser) {
             setError("No user is currently logged in.");
             return;
         }
 
-        const credential = EmailAuthProvider.credential(currentUser.email, password);
+        if (currentUser.providerData[0].providerId === 'password') {
+            if (!password) {
+                setError('Please enter your password.');
+                return;
+            }
+            const credential = EmailAuthProvider.credential(currentUser.email, password);
+            await reauthenticateWithCredential(currentUser, credential);
+        } else {
+            if (confirmText !== 'delete my account') {
+                setError('Please type "delete my account" to confirm.');
+                return;
+            }
+        }
 
         try {
-            // Re-authenticate the user
-            await reauthenticateWithCredential(currentUser, credential);
-
             // Fetch all workout documents in the "workouts" subcollection for the user
             const workoutsCollectionRef = collection(db, `users/${currentUser.uid}/workouts`);
             const workoutDocs = await getDocs(workoutsCollectionRef);
@@ -79,12 +89,8 @@ function Profile() {
     };
 
     const handleDeleteAccount = async () => {
-        if (!password) {
-            setError('Please enter your password.');
-            return;
-        }
         setError('');
-        await deleteUserAndData(password);
+        await deleteUserAndData(password, confirmText);
     };
 
     const handleProfilePicClick = () => {
@@ -107,7 +113,7 @@ function Profile() {
         }
     };
 
-    const backgroundColor = theme === 'light' ? 'bg-gray-200' : 'bg-gray-800';
+    const backgroundColor = theme === 'light' ? 'bg-gray-200' : 'bg-gray-900';
     const textColor = theme === 'light' ? 'text-gray-700' : 'text-white';
 
     return (
@@ -163,33 +169,17 @@ function Profile() {
             </div>
             <MobileNavbar />
             {modalOpen && (
-                <DeleteAccModal title="Confirm Account Deletion" onClose={() => setModalOpen(false)}>
-                    <div className={`p-4 w-11/12 ${textColor}`}>
-                        {error && <p className="text-red-500">{error}</p>}
-                        <p>Please enter your password to confirm deletion:</p>
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            className="p-2 border rounded w-full mb-4"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        <div className="flex justify-end">
-                            <button
-                                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2"
-                                onClick={() => setModalOpen(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded"
-                                onClick={handleDeleteAccount}
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </DeleteAccModal>
+                <DeleteAccModal 
+                    title="Confirm Account Deletion" 
+                    onClose={() => setModalOpen(false)}
+                    isGoogleUser={currentUser.providerData[0].providerId !== 'password'}
+                    password={password}
+                    setPassword={setPassword}
+                    confirmText={confirmText}
+                    setConfirmText={setConfirmText}
+                    handleDeleteAccount={handleDeleteAccount}
+                    error={error}
+                />
             )}
         </div>
     );
