@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login } from '../firebaseAuthServices';
+import { login, loginWithGoogle } from '../firebaseAuthServices';
 import { useAuth } from '../AuthContext';
 import MobileNavbar from '../components/MobileNavbar';
 import { Lock, Mail } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -25,6 +27,17 @@ const LoginPage = () => {
     try {
       await login(email, password);
       console.log('Logged in');
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    try {
+      const user = await loginWithGoogle();
+      console.log('Logged in with Google:', user);
+      navigate('/');
     } catch (error) {
       setError(error.message);
     }
@@ -94,7 +107,14 @@ const LoginPage = () => {
             </div>
           </form>
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
+            >
+              <FontAwesomeIcon icon={faGoogle} className="h-5 w-5 text-white mr-2" />
+              Sign in with Google
+            </button>
+            <p className="text-gray-600 mt-4">
               Don't have an account?{" "}
               <Link to="/register" className="text-indigo-600 hover:text-indigo-500 font-medium">
                 Sign up
