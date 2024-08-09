@@ -59,7 +59,7 @@ function EditTemplate() {
         }
     };
 
-    const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
+    const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-900 text-white';
 
     return (
         <div className={`${containerClass} min-h-screen`}>

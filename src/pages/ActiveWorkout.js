@@ -14,11 +14,14 @@ import TimerModal from "../components/TimerModal";
 
 function ActiveWorkout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const { currentUser } = useAuth();
-  const location = useLocation();
   const { state, setState, clearState } = usePersistedState();
-  const { selectedExercises, localExerciseData, startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
+  
+  const selectedExercises = state.selectedExercises || []; // Ensure this is an array
+  const localExerciseData = state.localExerciseData || []; // Ensure this is an array
+  const { startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
@@ -26,6 +29,28 @@ function ActiveWorkout() {
     return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
   });
 
+  // Load selected exercises and start the timer if navigating from a template
+  useEffect(() => {
+    if (location.state?.startTimer) {
+      const currentTime = Date.now();
+      setState(prevState => ({
+        ...prevState,
+        isActive: true,
+        startTime: currentTime,
+        selectedExercises: location.state.selectedExercises || [],
+        localExerciseData: (location.state.selectedExercises || []).map(ex => ({
+          Name: ex.Name,
+          Category: ex.Category,
+          Muscle: ex.Muscle,
+          sets: ex.sets || [{ weight: "", reps: "" }],
+        })),
+      }));
+      localStorage.setItem("startTime", JSON.stringify(currentTime));
+      localStorage.setItem("isActive", JSON.stringify(true));
+    }
+  }, [location.state, setState]);
+
+  // Manage the timer state and persistence
   useEffect(() => {
     const savedStartTime = localStorage.getItem("startTime");
     const savedIsActive = localStorage.getItem("isActive");
@@ -66,6 +91,7 @@ function ActiveWorkout() {
     };
   }, [isActive, setState]);
 
+  // Handle persistence across page reloads or tab closing
   useEffect(() => {
     const handleBeforeUnload = () => {
       localStorage.setItem("timer", JSON.stringify(state.timer));
@@ -79,32 +105,7 @@ function ActiveWorkout() {
     };
   }, [isActive, state.timer, state.startTime]);
 
-  useEffect(() => {
-    const savedStartTime = localStorage.getItem("startTime");
-    if (location.state?.startTimer && !savedStartTime) {
-      const currentTime = Date.now();
-      setState(prevState => ({
-        ...prevState,
-        isActive: true,
-        startTime: currentTime,
-      }));
-      localStorage.setItem("startTime", JSON.stringify(currentTime));
-      localStorage.setItem("isActive", JSON.stringify(true));
-    }
-  }, [location, setState]);
-
-  useEffect(() => {
-    if (timeLeft !== null) {
-      localStorage.setItem("timeLeft", JSON.stringify(timeLeft));
-      if (timeLeft === 0) {
-        localStorage.removeItem("timeLeft");
-        setTimeLeft(null);
-      }
-    } else {
-      localStorage.removeItem("timeLeft");
-    }
-  }, [timeLeft]);
-
+  // Manage the timer modal and exercise addition modal
   const openActiveWorkoutModal = () => {
     setState(prevState => ({
       ...prevState,
@@ -142,6 +143,7 @@ function ActiveWorkout() {
     }));
   };
 
+  // Handle workout cancellation and finishing
   const handleCancelWorkout = () => {
     setState(prevState => ({
       ...prevState,
@@ -199,8 +201,7 @@ function ActiveWorkout() {
     navigate("/");
   };
 
-  const containerClass = theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white";
-
+  // Handle exercise set changes
   const handleSetChange = (exerciseName, setIndex, field, value) => {
     setState(prevState => {
       const newLocalExerciseData = [...prevState.localExerciseData];
@@ -227,14 +228,16 @@ function ActiveWorkout() {
     });
   };
 
+  // Time formatting for the timer display
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes.toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
   };
 
+  // UI for the active workout page
   return (
-    <div className={`active-workout-page min-h-screen ${containerClass} flex flex-col pb-16`}>
+    <div className={`active-workout-page min-h-screen ${theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"} flex flex-col pb-16`}>
       <div className={`w-full flex justify-between p-4 ${theme === 'light' ? 'bg-white' : 'bg-gray-800'} shadow-md`}>
         <button
           className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"

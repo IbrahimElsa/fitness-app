@@ -48,11 +48,38 @@ function Templates() {
         }
     };
 
-    const handleLoadTemplate = (template) => {
-        navigate("/active-Workout", { state: { selectedExercises: template.exercises } });
+    const handleLoadTemplate = async (template) => {
+        try {
+            // Fetch the previously completed workout sets from Firestore (if any)
+            const workoutsCollectionRef = collection(db, "users", currentUser.uid, "workouts");
+            const querySnapshot = await getDocs(workoutsCollectionRef);
+
+            let previousExercises = template.exercises.map(exercise => ({
+                ...exercise,
+                sets: [{ weight: "", reps: "" }]  // Default to one empty set
+            }));
+
+            querySnapshot.forEach(docSnapshot => {
+                const workoutData = docSnapshot.data();
+                workoutData.exercises.forEach(prevExercise => {
+                    const matchingExercise = previousExercises.find(ex => ex.Name === prevExercise.Name);
+                    if (matchingExercise) {
+                        // Maintain the number of previous sets, but initialize with empty values
+                        matchingExercise.sets = prevExercise.sets.map(() => ({
+                            weight: "",
+                            reps: ""
+                        }));
+                    }
+                });
+            });
+
+            navigate("/active-Workout", { state: { selectedExercises: previousExercises, startTimer: true } });
+        } catch (error) {
+            console.error("Error loading template:", error);
+        }
     };
 
-    const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
+    const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-900 text-white';
 
     return (
         <div className={`${containerClass} min-h-screen`}>
