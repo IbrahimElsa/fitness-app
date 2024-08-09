@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import ActiveWorkoutModal from "../components/ActiveWorkoutModal";
+import ActiveWorkoutModal from "../components/SearchExercisesModal";
 import CancelModal from "../components/CancelModal";
 import exercisesData from "../components/Exercises.json";
 import MobileNavbar from "../components/MobileNavbar";

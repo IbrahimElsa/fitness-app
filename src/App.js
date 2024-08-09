@@ -10,7 +10,8 @@ import History from './pages/History';
 import Workout from './pages/Workout';
 import ActiveWorkout from './pages/ActiveWorkout';
 import Exercises from './pages/Exercises';
-import Coach from './pages/Coach';
+import Templetes from './pages/Templetes';
+import CreateTemplete from './pages/createTemplete';
 import Profile from './pages/Profile';
 import FinishedWorkout from './pages/FinishedWorkout';
 
@@ -30,7 +31,8 @@ function App() {
               <Route path="/active-workout" element={<ActiveWorkout />} />
               <Route path="/finished-workout" element={<FinishedWorkout />} />
               <Route path="/exercises" element={<Exercises />} />
-              <Route path="/coach" element={<Coach />} />
+              <Route path="/templetes" element={<Templetes />} />
+              <Route path="/create-templete" element={<CreateTemplete />} />
             </Routes>
           </Router>
         </PersistedStateProvider>

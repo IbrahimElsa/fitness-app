@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { useTheme } from "../components/ThemeContext";
+import { useTheme } from "./ThemeContext";
 import { db } from "../firebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 
-const ActiveWorkoutModal = ({
+const SearchExercisesModal = ({
   show,
   title,
   onClose,
@@ -165,4 +165,4 @@ const ActiveWorkoutModal = ({
   );
 };
 
-export default ActiveWorkoutModal;
+export default SearchExercisesModal;

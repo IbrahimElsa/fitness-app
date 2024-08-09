@@ -24,7 +24,7 @@ const MobileNavbar = () => {
     { icon: History, label: 'History', path: '/history' },
     { icon: PlusCircle, label: 'Workout', path: '/workout', onClick: handleWorkoutClick },
     { icon: Dumbbell, label: 'Exercises', path: '/exercises' },
-    { icon: User, label: 'Coach', path: '/coach' },
+    { icon: User, label: 'Coach', path: '/templetes' },
   ];
 
   return (

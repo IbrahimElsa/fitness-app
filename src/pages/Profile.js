@@ -109,7 +109,7 @@ function Profile() {
             const downloadURL = await getDownloadURL(storageRef);
             await updateDoc(doc(db, "users", currentUser.uid), { profilePic: downloadURL });
             setProfilePic(downloadURL);
-            setShowPencil(false); // Hide the pencil icon after changing the profile picture
+            setShowPencil(false);
         }
     };
 
