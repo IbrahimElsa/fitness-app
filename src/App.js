@@ -10,8 +10,8 @@ import History from './pages/History';
 import Workout from './pages/Workout';
 import ActiveWorkout from './pages/ActiveWorkout';
 import Exercises from './pages/Exercises';
-import Templetes from './pages/Templetes';
-import CreateTemplete from './pages/createTemplete';
+import Templates from './pages/Templates';
+import EditTemplate from './pages/EditTemplate';
 import Profile from './pages/Profile';
 import FinishedWorkout from './pages/FinishedWorkout';
 
@@ -31,8 +31,8 @@ function App() {
               <Route path="/active-workout" element={<ActiveWorkout />} />
               <Route path="/finished-workout" element={<FinishedWorkout />} />
               <Route path="/exercises" element={<Exercises />} />
-              <Route path="/templetes" element={<Templetes />} />
-              <Route path="/create-templete" element={<CreateTemplete />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/edit-template" element={<EditTemplate />} />
             </Routes>
           </Router>
         </PersistedStateProvider>

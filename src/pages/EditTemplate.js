@@ -1,51 +1,61 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
-import { doc, collection, addDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import SearchExercisesModal from "../components/SearchExercisesModal";
 import exercisesData from "../components/Exercises.json";
 
-function CreateTemplete() {
+function EditTemplate() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { theme } = useTheme();
     const { currentUser } = useAuth();
-    const [templeteName, setTempleteName] = useState("");
+    const [templateName, setTemplateName] = useState("");
     const [selectedExercises, setSelectedExercises] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (location.state && location.state.template) {
+            const { template } = location.state;
+            setTemplateName(template.name);
+            setSelectedExercises(template.exercises);
+        }
+    }, [location.state]);
 
     const handleAddExercise = (exercise) => {
         setSelectedExercises([...selectedExercises, exercise]);
     };
 
-    const handleSaveTemplete = async () => {
-        if (templeteName.trim() === "" || selectedExercises.length === 0) {
-            alert("Please name the templete and add at least one exercise.");
+    const handleRemoveExercise = (indexToRemove) => {
+        setSelectedExercises(selectedExercises.filter((_, index) => index !== indexToRemove));
+    };
+
+    const handleSaveTemplate = async () => {
+        if (templateName.trim() === "" || selectedExercises.length === 0) {
+            alert("Please name the template and add at least one exercise.");
             return;
         }
 
         try {
-            // Get a reference to the specific user's document
-            const userDocRef = doc(db, "users", currentUser.uid);
-            
-            // Create a reference to the 'templetes' collection under the user's document
-            const templetesCollectionRef = collection(userDocRef, "templetes");
+            // Get a reference to the specific template document
+            const templateDocRef = doc(db, "users", currentUser.uid, "templates", location.state.template.id);
 
-            // Add the new template to the 'templetes' collection
-            await addDoc(templetesCollectionRef, {
-                name: templeteName,
+            // Update the existing template document with the new data
+            await updateDoc(templateDocRef, {
+                name: templateName,
                 exercises: selectedExercises,
-                createdAt: new Date(),  // Optional: track when the template was created
+                updatedAt: new Date(),  // Optional: track when the template was updated
             });
 
-            // Redirect to the templetes page after successful save
-            navigate("/templetes");
+            // Redirect to the templates page after successful save
+            navigate("/templates");
         } catch (error) {
-            console.error("Error saving templete:", error);
-            alert("There was an error saving the templete. Please try again.");
+            console.error("Error saving template:", error);
+            alert("There was an error saving the template. Please try again.");
         }
     };
 
@@ -55,14 +65,14 @@ function CreateTemplete() {
         <div className={`${containerClass} min-h-screen`}>
             <Navbar />
             <div className="container mx-auto px-4 py-8">
-                <h1 className="text-3xl text-center font-bold mb-10">Create New Templete</h1>
+                <h1 className="text-3xl text-center font-bold mb-10">Edit Template</h1>
                 <div className="mb-6">
                     <input
                         type="text"
-                        placeholder="Name your templete..."
+                        placeholder="Name your template..."
                         className={`w-full px-4 py-2 border rounded ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'} ${theme === 'light' ? 'bg-gray-100' : 'bg-gray-700'}`}
-                        value={templeteName}
-                        onChange={(e) => setTempleteName(e.target.value)}
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
                     />
                 </div>
                 <div className="mb-6">
@@ -77,22 +87,30 @@ function CreateTemplete() {
                     {selectedExercises.map((exercise, index) => (
                         <div
                             key={index}
-                            className="bg-gray-700 text-white p-6 rounded-lg shadow-lg"
+                            className="bg-gray-700 text-white p-6 rounded-lg shadow-lg relative"
                         >
                             <h5 className="font-bold text-2xl mb-2">{exercise.Name}</h5>
                             <p className="text-base">Category: {exercise.Category}</p>
                             {exercise.Muscle && <p className="text-base">Muscle: {exercise.Muscle}</p>}
+                            {/* X button to remove exercise */}
+                            <button
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                                onClick={() => handleRemoveExercise(index)}
+                            >
+                                X
+                            </button>
                         </div>
                     ))}
                 </div>
                 <button
-                    className="bg-green-600 text-white py-2 px-4 rounded-full mt-8"
-                    onClick={handleSaveTemplete}
+                    className="bg-green-600 text-white py-2 px-4 rounded-full mt-8 mb-12"
+                    onClick={handleSaveTemplate}
                 >
-                    Save Templete
+                    Save Template
                 </button>
             </div>
-            <MobileNavbar />
+            {/* Place the MobileNavbar fixed at the bottom */}
+            <MobileNavbar className="fixed bottom-0 left-0 w-full" />
             {isModalOpen && (
                 <SearchExercisesModal
                     show={isModalOpen}
@@ -106,4 +124,4 @@ function CreateTemplete() {
     );
 }
 
-export default CreateTemplete;
+export default EditTemplate;

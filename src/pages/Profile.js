@@ -50,35 +50,32 @@ function Profile() {
             setError("No user is currently logged in.");
             return;
         }
-
-        if (currentUser.providerData[0].providerId === 'password') {
-            if (!password) {
-                setError('Please enter your password.');
-                return;
-            }
-            const credential = EmailAuthProvider.credential(currentUser.email, password);
-            await reauthenticateWithCredential(currentUser, credential);
-        } else {
-            if (confirmText !== 'delete my account') {
-                setError('Please type "delete my account" to confirm.');
-                return;
-            }
-        }
-
+    
         try {
-            // Fetch all workout documents in the "workouts" subcollection for the user
+            if (currentUser.providerData[0].providerId === 'password') {
+                if (!password) {
+                    setError('Please enter your password.');
+                    return;
+                }
+                const credential = EmailAuthProvider.credential(currentUser.email, password);
+                await reauthenticateWithCredential(currentUser, credential);
+            } else {
+                if (confirmText !== 'delete my account') {
+                    setError('Please type "delete my account" to confirm.');
+                    return;
+                }
+            }
+    
+            // Fetch and delete all documents in the "workouts" subcollection for the user
             const workoutsCollectionRef = collection(db, `users/${currentUser.uid}/workouts`);
             const workoutDocs = await getDocs(workoutsCollectionRef);
-            
-            // Delete each workout document
-            for (const docSnapshot of workoutDocs.docs) {
-                await deleteDoc(docSnapshot.ref);
-            }
-
+            const deletePromises = workoutDocs.docs.map(docSnapshot => deleteDoc(docSnapshot.ref));
+            await Promise.all(deletePromises);
+    
             // Delete the user's document from the "users" collection
             const userDocRef = doc(db, "users", currentUser.uid);
             await deleteDoc(userDocRef);
-
+    
             // Finally, delete the user's authentication data
             await firebaseDeleteUser(currentUser);
             
@@ -87,6 +84,7 @@ function Profile() {
             setError(error.message);
         }
     };
+    
 
     const handleDeleteAccount = async () => {
         setError('');
