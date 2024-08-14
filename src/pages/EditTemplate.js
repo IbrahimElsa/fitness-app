@@ -5,7 +5,7 @@ import MobileNavbar from "../components/MobileNavbar";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 import SearchExercisesModal from "../components/SearchExercisesModal";
 import exercisesData from "../components/Exercises.json";
 
@@ -39,18 +39,28 @@ function EditTemplate() {
             alert("Please name the template and add at least one exercise.");
             return;
         }
-
+    
         try {
-            // Get a reference to the specific template document
-            const templateDocRef = doc(db, "users", currentUser.uid, "templates", location.state.template.id);
-
-            // Update the existing template document with the new data
-            await updateDoc(templateDocRef, {
-                name: templateName,
-                exercises: selectedExercises,
-                updatedAt: new Date(),  // Optional: track when the template was updated
-            });
-
+            if (location.state && location.state.template) {
+                // If editing an existing template
+                const templateDocRef = doc(db, "users", currentUser.uid, "templates", location.state.template.id);
+    
+                await updateDoc(templateDocRef, {
+                    name: templateName,
+                    exercises: selectedExercises,
+                    updatedAt: new Date(),  // Optional: track when the template was updated
+                });
+            } else {
+                // If creating a new template
+                const templatesCollectionRef = collection(db, "users", currentUser.uid, "templates");
+    
+                await addDoc(templatesCollectionRef, {
+                    name: templateName,
+                    exercises: selectedExercises,
+                    createdAt: new Date(),  // Optional: track when the template was created
+                });
+            }
+    
             // Redirect to the templates page after successful save
             navigate("/templates");
         } catch (error) {

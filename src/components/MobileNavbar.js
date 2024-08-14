@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, History, PlusCircle, Dumbbell, User } from 'lucide-react';
+import { Home, History, PlusCircle, Dumbbell, Pencil } from 'lucide-react';
 import { usePersistedState } from './PersistedStateProvider';
 import { useTheme } from './ThemeContext';
 
@@ -21,10 +21,10 @@ const MobileNavbar = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
-    { icon: History, label: 'History', path: '/history' },
+    { icon: Pencil, label: 'Templates', path: '/templates' },
     { icon: PlusCircle, label: 'Workout', path: '/workout', onClick: handleWorkoutClick },
     { icon: Dumbbell, label: 'Exercises', path: '/exercises' },
-    { icon: User, label: 'Coach', path: '/templates' },
+    { icon: History, label: 'History', path: '/history' },
   ];
 
   return (
