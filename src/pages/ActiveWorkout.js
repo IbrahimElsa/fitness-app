@@ -18,7 +18,7 @@ function ActiveWorkout() {
   const { theme } = useTheme();
   const { currentUser } = useAuth();
   const { state, setState, clearState } = usePersistedState();
-  
+
   const selectedExercises = state.selectedExercises || []; // Ensure this is an array
   const localExerciseData = state.localExerciseData || []; // Ensure this is an array
   const { startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
@@ -29,9 +29,21 @@ function ActiveWorkout() {
     return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
   });
 
-  // Load selected exercises and start the timer if navigating from a template
+  // Load selected exercises and start the timer if navigating from a template or a fresh workout
   useEffect(() => {
-    if (location.state?.startTimer) {
+    const savedStartTime = localStorage.getItem("startTime");
+    const savedIsActive = localStorage.getItem("isActive");
+
+    if (savedStartTime && savedIsActive === "true") {
+      const currentTime = Date.now();
+      const elapsedTime = Math.floor((currentTime - JSON.parse(savedStartTime)) / 1000);
+      setState(prevState => ({
+        ...prevState,
+        timer: elapsedTime,
+        startTime: JSON.parse(savedStartTime),
+        isActive: true,
+      }));
+    } else if (location.state?.startTimer) {
       const currentTime = Date.now();
       setState(prevState => ({
         ...prevState,
@@ -52,30 +64,23 @@ function ActiveWorkout() {
 
   // Manage the timer state and persistence
   useEffect(() => {
-    const savedStartTime = localStorage.getItem("startTime");
+    const savedTimer = localStorage.getItem("timer");
     const savedIsActive = localStorage.getItem("isActive");
 
-    if (savedStartTime && savedIsActive === "true") {
-      const currentTime = Date.now();
-      const elapsedTime = Math.floor((currentTime - JSON.parse(savedStartTime)) / 1000);
+    if (savedIsActive === "true") {
       setState(prevState => ({
         ...prevState,
-        timer: elapsedTime,
-        startTime: JSON.parse(savedStartTime),
+        timer: savedTimer ? JSON.parse(savedTimer) : prevState.timer,
         isActive: true,
       }));
     }
-  }, [setState]);
 
-  useEffect(() => {
     let interval = null;
     if (isActive) {
       interval = setInterval(() => {
         setState(prevState => {
           const newTimer = prevState.timer + 1;
           localStorage.setItem("timer", JSON.stringify(newTimer));
-          localStorage.setItem("isActive", JSON.stringify(isActive));
-          localStorage.setItem("startTime", JSON.stringify(prevState.startTime));
           return {
             ...prevState,
             timer: newTimer,
