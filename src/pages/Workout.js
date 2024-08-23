@@ -11,7 +11,11 @@ function WorkoutPage() {
     const navigate = useNavigate();
     const { theme } = useTheme();
     const { currentUser } = useAuth();
-    const [templates, setTemplates] = useState([]);
+    const [templates, setTemplates] = useState(() => {
+        // Load templates from local storage if available
+        const savedTemplates = localStorage.getItem("workoutTemplates");
+        return savedTemplates ? JSON.parse(savedTemplates) : [];
+    });
     const [currentPage, setCurrentPage] = useState(0);
 
     useEffect(() => {
@@ -22,6 +26,8 @@ function WorkoutPage() {
                     const querySnapshot = await getDocs(templatesCollectionRef);
                     const templatesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setTemplates(templatesData);
+                    // Save templates to local storage
+                    localStorage.setItem("workoutTemplates", JSON.stringify(templatesData));
                 } catch (error) {
                     console.error("Error fetching templates:", error);
                 }

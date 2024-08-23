@@ -10,7 +10,11 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 function HistoryPage() {
     const { theme, themeCss } = useTheme();
     const { currentUser } = useAuth();
-    const [workouts, setWorkouts] = useState([]);
+    const [workouts, setWorkouts] = useState(() => {
+        // Load workouts from local storage if available
+        const savedWorkouts = localStorage.getItem("workouts");
+        return savedWorkouts ? JSON.parse(savedWorkouts) : [];
+    });
     const [expandedWorkouts, setExpandedWorkouts] = useState({});
     const [lastVisible, setLastVisible] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -57,6 +61,8 @@ function HistoryPage() {
             });
 
             setWorkouts(workoutsData);
+            // Save workouts to local storage
+            localStorage.setItem("workouts", JSON.stringify(workoutsData));
             setLoading(false);
         }, (error) => {
             console.error("Error fetching workouts:", error);
@@ -103,7 +109,12 @@ function HistoryPage() {
                 };
             });
 
-            setWorkouts(prevWorkouts => [...prevWorkouts, ...newWorkouts]);
+            setWorkouts(prevWorkouts => {
+                const updatedWorkouts = [...prevWorkouts, ...newWorkouts];
+                // Save updated workouts to local storage
+                localStorage.setItem("workouts", JSON.stringify(updatedWorkouts));
+                return updatedWorkouts;
+            });
             setLoading(false);
         }, (error) => {
             console.error("Error fetching more workouts:", error);
@@ -121,7 +132,7 @@ function HistoryPage() {
     const WorkoutItem = ({ workout }) => {
         const [isOverflowing, setIsOverflowing] = useState(false);
         const contentRef = useRef(null);
-
+    
         useEffect(() => {
             const checkOverflow = () => {
                 if (contentRef.current) {
@@ -129,25 +140,28 @@ function HistoryPage() {
                     setIsOverflowing(isOverflowing);
                 }
             };
-
+    
             checkOverflow();
             window.addEventListener('resize', checkOverflow);
             return () => window.removeEventListener('resize', checkOverflow);
         }, [workout]);
-
+    
+        // Ensure workout.date is a Date object
+        const workoutDate = workout.date instanceof Date ? workout.date : new Date(workout.date);
+    
         const isExpanded = expandedWorkouts[workout.id];
-
+    
         const fadeClass = theme === 'light' 
             ? 'from-gray-300 to-transparent'
             : 'from-gray-900 to-transparent';
-
+    
         return (
             <div className={`workout-item ${themeCss[theme]} shadow-md rounded-lg p-4 mb-4 w-11/12 relative ${theme === 'dark' ? themeCss.outlineDark : themeCss.outlineLight}`}>
                 <div 
                     ref={contentRef} 
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-full' : 'max-h-[33vh]'}`}
                 >
-                    <p className="text-lg font-bold">Workout on {workout.date.toLocaleDateString()}</p>
+                    <p className="text-lg font-bold">Workout on {workoutDate.toLocaleDateString()}</p>
                     <p className="text-sm">Duration: {workout.duration}</p>
                     {workout.exercises.map((exercise, index) => (
                         <div key={index} className="exercise-item mt-4">
@@ -183,6 +197,7 @@ function HistoryPage() {
             </div>
         );
     };
+    
 
     return (
         <div className={`history-page ${themeCss[theme]} flex flex-col min-h-screen relative`}>

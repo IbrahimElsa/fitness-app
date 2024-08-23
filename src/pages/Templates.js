@@ -11,7 +11,11 @@ function Templates() {
     const navigate = useNavigate();
     const { theme } = useTheme();
     const { currentUser } = useAuth();
-    const [templates, setTemplates] = useState([]);
+    const [templates, setTemplates] = useState(() => {
+        // Load templates from local storage if available
+        const savedTemplates = localStorage.getItem("templates");
+        return savedTemplates ? JSON.parse(savedTemplates) : [];
+    });
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -21,6 +25,8 @@ function Templates() {
                     const querySnapshot = await getDocs(templatesCollectionRef);
                     const templatesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setTemplates(templatesData);
+                    // Save templates to local storage
+                    localStorage.setItem("templates", JSON.stringify(templatesData));
                 } catch (error) {
                     console.error("Error fetching templates:", error);
                 }
@@ -42,7 +48,10 @@ function Templates() {
         try {
             const templateDocRef = doc(db, "users", currentUser.uid, "templates", templateId);
             await deleteDoc(templateDocRef);
-            setTemplates(templates.filter(template => template.id !== templateId));
+            const updatedTemplates = templates.filter(template => template.id !== templateId);
+            setTemplates(updatedTemplates);
+            // Update local storage
+            localStorage.setItem("templates", JSON.stringify(updatedTemplates));
         } catch (error) {
             console.error("Error deleting template:", error);
         }
