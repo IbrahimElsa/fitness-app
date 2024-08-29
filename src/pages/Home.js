@@ -23,16 +23,25 @@ function Home() {
     const fetchWorkouts = async () => {
       if (!currentUser) return;
 
-      const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
-      const q = query(workoutsRef);
+      // Check if gym visits exist in localStorage
+      const storedGymVisits = localStorage.getItem("gymVisits");
+      if (storedGymVisits) {
+        setGymVisits(JSON.parse(storedGymVisits).map(date => new Date(date)));
+      } else {
+        const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
+        const q = query(workoutsRef);
 
-      const snapshot = await getDocs(q);
-      const workouts = snapshot.docs.map(doc => {
-        const workoutData = doc.data();
-        return new Date(workoutData.timestamp);
-      });
+        const snapshot = await getDocs(q);
+        const workouts = snapshot.docs.map(doc => {
+          const workoutData = doc.data();
+          return new Date(workoutData.timestamp);
+        });
 
-      setGymVisits(workouts);
+        setGymVisits(workouts);
+
+        // Save gym visits to localStorage
+        localStorage.setItem("gymVisits", JSON.stringify(workouts.map(date => date.toISOString())));
+      }
     };
 
     fetchWorkouts();
