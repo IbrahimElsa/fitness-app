@@ -18,6 +18,7 @@ function HistoryPage() {
     const [expandedWorkouts, setExpandedWorkouts] = useState({});
     const [lastVisible, setLastVisible] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [hasMoreWorkouts, setHasMoreWorkouts] = useState(true); // State to track if more workouts are available
 
     useEffect(() => {
         if (!currentUser) {
@@ -83,6 +84,7 @@ function HistoryPage() {
         onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
                 console.log("No more workouts found in the database.");
+                setHasMoreWorkouts(false); // Set this to false when no more workouts are available
                 setLoading(false);
                 return;
             }
@@ -197,7 +199,6 @@ function HistoryPage() {
             </div>
         );
     };
-    
 
     return (
         <div className={`history-page ${themeCss[theme]} flex flex-col min-h-screen relative`}>
@@ -214,13 +215,15 @@ function HistoryPage() {
                     <p>No workouts found</p>
                 )}
                 {loading && <p>Loading...</p>}
-                {!loading && lastVisible && (
+                {!loading && hasMoreWorkouts ? (
                     <button 
                         onClick={loadMoreWorkouts} 
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
                     >
                         Load More
                     </button>
+                ) : (
+                    !loading && <p>All Workouts Displayed</p>
                 )}
             </div>
             <MobileNavbar className="absolute bottom-0 left-0 right-0" /> {/* Ensure MobileNavbar is absolute */}

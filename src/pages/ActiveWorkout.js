@@ -19,9 +19,9 @@ function ActiveWorkout() {
   const { currentUser } = useAuth();
   const { state, setState, clearState } = usePersistedState();
 
-  const selectedExercises = state.selectedExercises || []; // Ensure this is an array
-  const localExerciseData = state.localExerciseData || []; // Ensure this is an array
-  const { startTime, timer, isActive, showActiveWorkoutModal, showCancelModal } = state;
+  const selectedExercises = state.selectedExercises || [];
+  const localExerciseData = state.localExerciseData || [];
+  const { startTime, isActive, showActiveWorkoutModal, showCancelModal } = state;
 
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
@@ -29,28 +29,24 @@ function ActiveWorkout() {
     return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
   });
 
-  // Load selected exercises and start the timer if navigating from a template or a fresh workout
   useEffect(() => {
     const savedStartTime = localStorage.getItem("startTime");
     const savedIsActive = localStorage.getItem("isActive");
 
     if (savedStartTime && savedIsActive === "true") {
-      const currentTime = Date.now();
-      const elapsedTime = Math.floor((currentTime - JSON.parse(savedStartTime)) / 1000);
-      setState(prevState => ({
+      setState((prevState) => ({
         ...prevState,
-        timer: elapsedTime,
         startTime: JSON.parse(savedStartTime),
         isActive: true,
       }));
     } else if (location.state?.startTimer) {
       const currentTime = Date.now();
-      setState(prevState => ({
+      setState((prevState) => ({
         ...prevState,
         isActive: true,
         startTime: currentTime,
         selectedExercises: location.state.selectedExercises || [],
-        localExerciseData: (location.state.selectedExercises || []).map(ex => ({
+        localExerciseData: (location.state.selectedExercises || []).map((ex) => ({
           Name: ex.Name,
           Category: ex.Category,
           Muscle: ex.Muscle,
@@ -62,41 +58,24 @@ function ActiveWorkout() {
     }
   }, [location.state, setState]);
 
-  // Manage the timer state and persistence
   useEffect(() => {
-    const savedTimer = localStorage.getItem("timer");
-    const savedIsActive = localStorage.getItem("isActive");
-
-    if (savedIsActive === "true") {
-      setState(prevState => ({
-        ...prevState,
-        timer: savedTimer ? JSON.parse(savedTimer) : prevState.timer,
-        isActive: true,
-      }));
-    }
-
-    let interval = null;
-    if (isActive) {
-      interval = setInterval(() => {
-        setState(prevState => {
-          const newTimer = prevState.timer + 1;
-          localStorage.setItem("timer", JSON.stringify(newTimer));
-          return {
-            ...prevState,
-            timer: newTimer,
-          };
-        });
-      }, 1000);
-    } else {
-      clearInterval(interval);
-    }
-
-    return () => {
-      clearInterval(interval);
+    const updateTimer = () => {
+      if (state.startTime && state.isActive) {
+        const currentTime = Date.now();
+        const elapsedTime = Math.floor((currentTime - state.startTime) / 1000);
+        setState((prevState) => ({
+          ...prevState,
+          timer: elapsedTime,
+        }));
+      }
     };
-  }, [isActive, setState]);
 
-  // Handle persistence across page reloads or tab closing
+    const interval = setInterval(updateTimer, 1000);
+    updateTimer(); // Call immediately to set the correct time initially
+
+    return () => clearInterval(interval);
+  }, [state.startTime, state.isActive, setState]);
+
   useEffect(() => {
     const handleBeforeUnload = () => {
       localStorage.setItem("timer", JSON.stringify(state.timer));
@@ -110,16 +89,15 @@ function ActiveWorkout() {
     };
   }, [isActive, state.timer, state.startTime]);
 
-  // Manage the timer modal and exercise addition modal
   const openActiveWorkoutModal = () => {
-    setState(prevState => ({
+    setState((prevState) => ({
       ...prevState,
       showActiveWorkoutModal: true,
     }));
   };
 
   const closeActiveWorkoutModal = () => {
-    setState(prevState => ({
+    setState((prevState) => ({
       ...prevState,
       showActiveWorkoutModal: false,
     }));
@@ -130,9 +108,9 @@ function ActiveWorkout() {
       Category: exercise.Category,
       Muscle: exercise.Muscle,
       Name: exercise.Name,
-      sets: [{ weight: '', reps: '' }],
+      sets: [{ weight: "", reps: "" }],
     };
-    setState(prevState => ({
+    setState((prevState) => ({
       ...prevState,
       selectedExercises: [...prevState.selectedExercises, exercise],
       localExerciseData: [...prevState.localExerciseData, newExercise],
@@ -141,16 +119,15 @@ function ActiveWorkout() {
   };
 
   const handleRemoveExercise = (exerciseName) => {
-    setState(prevState => ({
+    setState((prevState) => ({
       ...prevState,
-      selectedExercises: prevState.selectedExercises.filter(ex => ex.Name !== exerciseName),
-      localExerciseData: prevState.localExerciseData.filter(ex => ex.Name !== exerciseName),
+      selectedExercises: prevState.selectedExercises.filter((ex) => ex.Name !== exerciseName),
+      localExerciseData: prevState.localExerciseData.filter((ex) => ex.Name !== exerciseName),
     }));
   };
 
-  // Handle workout cancellation and finishing
   const handleCancelWorkout = () => {
-    setState(prevState => ({
+    setState((prevState) => ({
       ...prevState,
       showCancelModal: true,
     }));
@@ -176,12 +153,11 @@ function ActiveWorkout() {
           Category: exercise.Category,
           Muscle: exercise.Muscle,
           Name: exercise.Name,
-          sets: exercise.sets.filter(set => set.weight !== '' || set.reps !== '')
-            .map((set, index) => ({
-              setNumber: index + 1,
-              weight: set.weight,
-              reps: set.reps,
-            })),
+          sets: exercise.sets.filter((set) => set.weight !== "" || set.reps !== "").map((set, index) => ({
+            setNumber: index + 1,
+            weight: set.weight,
+            reps: set.reps,
+          })),
         })),
         timestamp: new Date().toISOString(),
       };
@@ -206,13 +182,10 @@ function ActiveWorkout() {
     navigate("/");
   };
 
-  // Handle exercise set changes
   const handleSetChange = (exerciseName, setIndex, field, value) => {
-    setState(prevState => {
+    setState((prevState) => {
       const newLocalExerciseData = [...prevState.localExerciseData];
-      const exerciseIndex = newLocalExerciseData.findIndex(
-        (ex) => ex.Name === exerciseName
-      );
+      const exerciseIndex = newLocalExerciseData.findIndex((ex) => ex.Name === exerciseName);
 
       if (exerciseIndex === -1) {
         return prevState;
@@ -233,27 +206,25 @@ function ActiveWorkout() {
     });
   };
 
-  // Time formatting for the timer display
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes.toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
   };
 
-  // UI for the active workout page
   return (
     <div className={`active-workout-page min-h-screen ${theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"} flex flex-col pb-16`}>
-      <div className={`w-full flex justify-between p-4 ${theme === 'light' ? 'bg-white' : 'bg-gray-800'} shadow-md`}>
+      <div className={`w-full flex justify-between p-4 ${theme === "light" ? "bg-white" : "bg-gray-800"} shadow-md`}>
         <button
           className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
           onClick={() => setIsTimerModalOpen(true)}
         >
           {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
         </button>
-        <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>
-          {timer >= 3600 && `${Math.floor(timer / 3600)}:`}
-          {Math.floor((timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
-          {(timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
+        <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === "light" ? "text-gray-800" : "text-white"}`}>
+          {state.timer >= 3600 && `${Math.floor(state.timer / 3600)}:`}
+          {Math.floor((state.timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
+          {(state.timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
         </div>
         <button
           className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
@@ -314,10 +285,15 @@ function ActiveWorkout() {
         />
       )}
       {showCancelModal && (
-        <CancelModal onConfirm={confirmCancelWorkout} onClose={() => setState(prevState => ({
-          ...prevState,
-          showCancelModal: false,
-        }))} />
+        <CancelModal
+          onConfirm={confirmCancelWorkout}
+          onClose={() =>
+            setState((prevState) => ({
+              ...prevState,
+              showCancelModal: false,
+            }))
+          }
+        />
       )}
       <MobileNavbar />
       <TimerModal
