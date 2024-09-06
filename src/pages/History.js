@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../components/ThemeContext";
 import { db } from '../firebaseConfig';
-import { collection, query, orderBy, limit, startAfter, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, limit, startAfter, onSnapshot, getDocs } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -11,14 +11,55 @@ function HistoryPage() {
     const { theme, themeCss } = useTheme();
     const { currentUser } = useAuth();
     const [workouts, setWorkouts] = useState(() => {
-        // Load workouts from local storage if available
-        const savedWorkouts = localStorage.getItem("workouts");
+        // Load initial workouts from local storage if available
+        const savedWorkouts = localStorage.getItem("recentWorkouts");
         return savedWorkouts ? JSON.parse(savedWorkouts) : [];
     });
     const [expandedWorkouts, setExpandedWorkouts] = useState({});
     const [lastVisible, setLastVisible] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [hasMoreWorkouts, setHasMoreWorkouts] = useState(true); // State to track if more workouts are available
+    const [hasMoreWorkouts, setHasMoreWorkouts] = useState(true);
+    const observer = useRef();
+
+    const loadMoreWorkouts = useCallback(async () => {
+        if (!currentUser || !lastVisible || loading || !hasMoreWorkouts) return;
+
+        setLoading(true);
+
+        const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
+        const q = query(workoutsRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(5));
+
+        try {
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                setHasMoreWorkouts(false);
+                setLoading(false);
+                return;
+            }
+
+            const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+            setLastVisible(lastVisibleDoc);
+
+            const newWorkouts = snapshot.docs.map(docToWorkout);
+
+            setWorkouts(prevWorkouts => [...prevWorkouts, ...newWorkouts]);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching more workouts:", error);
+            setLoading(false);
+        }
+    }, [currentUser, lastVisible, loading, hasMoreWorkouts]);
+
+    const lastWorkoutElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMoreWorkouts) {
+                loadMoreWorkouts();
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, hasMoreWorkouts, loadMoreWorkouts]);
 
     useEffect(() => {
         if (!currentUser) {
@@ -29,12 +70,13 @@ function HistoryPage() {
         setLoading(true);
 
         const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
-        const q = query(workoutsRef, orderBy("timestamp", "desc"), limit(10));
+        const q = query(workoutsRef, orderBy("timestamp", "desc"), limit(5));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
                 console.log("No workouts found in the database.");
                 setWorkouts([]);
+                setHasMoreWorkouts(false);
                 setLoading(false);
                 return;
             }
@@ -42,28 +84,11 @@ function HistoryPage() {
             const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
             setLastVisible(lastVisibleDoc);
 
-            const workoutsData = snapshot.docs.map((doc) => {
-                const data = doc.data();
-                const formattedDuration = typeof data.duration === 'string'
-                    ? data.duration
-                    : `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`;
-
-                const timestamp = data.timestamp;
-                let date = timestamp instanceof Date ? timestamp : 
-                           timestamp && timestamp.toDate ? timestamp.toDate() : 
-                           new Date(timestamp);
-
-                return {
-                    id: doc.id,
-                    duration: formattedDuration,
-                    exercises: data.exercises,
-                    date: date,
-                };
-            });
+            const workoutsData = snapshot.docs.map(docToWorkout);
 
             setWorkouts(workoutsData);
-            // Save workouts to local storage
-            localStorage.setItem("workouts", JSON.stringify(workoutsData));
+            // Save the 5 most recent workouts to local storage
+            localStorage.setItem("recentWorkouts", JSON.stringify(workoutsData));
             setLoading(false);
         }, (error) => {
             console.error("Error fetching workouts:", error);
@@ -73,55 +98,23 @@ function HistoryPage() {
         return () => unsubscribe();
     }, [currentUser]);
 
-    const loadMoreWorkouts = () => {
-        if (!currentUser || !lastVisible) return;
+    const docToWorkout = (doc) => {
+        const data = doc.data();
+        const formattedDuration = typeof data.duration === 'string'
+            ? data.duration
+            : `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`;
 
-        setLoading(true);
+        const timestamp = data.timestamp;
+        let date = timestamp instanceof Date ? timestamp : 
+                   timestamp && timestamp.toDate ? timestamp.toDate() : 
+                   new Date(timestamp);
 
-        const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
-        const q = query(workoutsRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(10));
-
-        onSnapshot(q, (snapshot) => {
-            if (snapshot.empty) {
-                console.log("No more workouts found in the database.");
-                setHasMoreWorkouts(false); // Set this to false when no more workouts are available
-                setLoading(false);
-                return;
-            }
-
-            const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-            setLastVisible(lastVisibleDoc);
-
-            const newWorkouts = snapshot.docs.map((doc) => {
-                const data = doc.data();
-                const formattedDuration = typeof data.duration === 'string'
-                    ? data.duration
-                    : `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`;
-
-                const timestamp = data.timestamp;
-                let date = timestamp instanceof Date ? timestamp : 
-                           timestamp && timestamp.toDate ? timestamp.toDate() : 
-                           new Date(timestamp);
-
-                return {
-                    id: doc.id,
-                    duration: formattedDuration,
-                    exercises: data.exercises,
-                    date: date,
-                };
-            });
-
-            setWorkouts(prevWorkouts => {
-                const updatedWorkouts = [...prevWorkouts, ...newWorkouts];
-                // Save updated workouts to local storage
-                localStorage.setItem("workouts", JSON.stringify(updatedWorkouts));
-                return updatedWorkouts;
-            });
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching more workouts:", error);
-            setLoading(false);
-        });
+        return {
+            id: doc.id,
+            duration: formattedDuration,
+            exercises: data.exercises,
+            date: date,
+        };
     };
 
     const toggleWorkoutExpansion = (workoutId) => {
@@ -131,7 +124,7 @@ function HistoryPage() {
         }));
     };
 
-    const WorkoutItem = ({ workout }) => {
+    const WorkoutItem = ({ workout, isLastElement }) => {
         const [isOverflowing, setIsOverflowing] = useState(false);
         const contentRef = useRef(null);
     
@@ -148,7 +141,6 @@ function HistoryPage() {
             return () => window.removeEventListener('resize', checkOverflow);
         }, [workout]);
     
-        // Ensure workout.date is a Date object
         const workoutDate = workout.date instanceof Date ? workout.date : new Date(workout.date);
     
         const isExpanded = expandedWorkouts[workout.id];
@@ -158,7 +150,10 @@ function HistoryPage() {
             : 'from-gray-900 to-transparent';
     
         return (
-            <div className={`workout-item ${themeCss[theme]} shadow-md rounded-lg p-4 mb-4 w-11/12 relative ${theme === 'dark' ? themeCss.outlineDark : themeCss.outlineLight}`}>
+            <div 
+                ref={isLastElement ? lastWorkoutElementRef : null}
+                className={`workout-item ${themeCss[theme]} shadow-md rounded-lg p-4 mb-4 w-11/12 relative ${theme === 'dark' ? themeCss.outlineDark : themeCss.outlineLight}`}
+            >
                 <div 
                     ref={contentRef} 
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-full' : 'max-h-[33vh]'}`}
@@ -206,27 +201,24 @@ function HistoryPage() {
             <div className="w-full flex justify-between items-center p-4">
                 <h1 className="text-xl font-bold text-right">History</h1>
             </div>
-            <div className="flex flex-col items-center justify-center flex-grow pt-10 pb-20"> {/* Adjust bottom padding */}
+            <div className="flex flex-col items-center justify-center flex-grow pt-10 pb-20">
                 {workouts.length > 0 ? (
-                    workouts.map((workout) => (
-                        <WorkoutItem key={workout.id} workout={workout} />
+                    workouts.map((workout, index) => (
+                        <WorkoutItem 
+                            key={workout.id} 
+                            workout={workout} 
+                            isLastElement={index === workouts.length - 1}
+                        />
                     ))
                 ) : (
                     <p>No workouts found</p>
                 )}
                 {loading && <p>Loading...</p>}
-                {!loading && hasMoreWorkouts ? (
-                    <button 
-                        onClick={loadMoreWorkouts} 
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
-                    >
-                        Load More
-                    </button>
-                ) : (
-                    !loading && <p>All Workouts Displayed</p>
+                {!loading && !hasMoreWorkouts && workouts.length > 0 && (
+                    <p className="mt-4 text-gray-600">You've reached the end of your workout history.</p>
                 )}
             </div>
-            <MobileNavbar className="absolute bottom-0 left-0 right-0" /> {/* Ensure MobileNavbar is absolute */}
+            <MobileNavbar className="absolute bottom-0 left-0 right-0" />
         </div>
     );
 }

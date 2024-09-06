@@ -3,9 +3,11 @@ import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
 import './CustomCalendar.css';
 import { useTheme } from "../components/ThemeContext";
+import { useNavigate } from "react-router-dom";
 
 const CustomCalendar = ({ gymVisits }) => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const tileClassName = ({ date, view }) => {
     if (view === 'month') {
@@ -28,6 +30,13 @@ const CustomCalendar = ({ gymVisits }) => {
     return null;
   };
 
+  const handleDayClick = (date) => {
+    // Format the date as 'YYYY-MM-DD'
+    const formattedDate = date.toISOString().split('T')[0];
+    // Navigate to the history page with the selected date
+    navigate(`/history?date=${formattedDate}`);
+  };
+
   return (
     <div className={`w-full flex justify-center ${theme === 'light' ? 'light-theme' : 'dark-theme'}`}>
       <div className="w-full max-w-[100vw] px-4">
@@ -45,6 +54,7 @@ const CustomCalendar = ({ gymVisits }) => {
               {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
             </span>
           }
+          onClickDay={handleDayClick}
         />
       </div>
     </div>
