@@ -89,7 +89,7 @@ function EditTemplate() {
     const handleTouchMove = (e) => {
         if (draggedItem === null || touchStartY === null) return;
         
-        const touchY = e.touches[0].clientY;
+        // The touchY variable isn't actually used, so we can remove it
         const draggedElement = exerciseRefs.current[draggedItem];
         
         if (!draggedElement) return;

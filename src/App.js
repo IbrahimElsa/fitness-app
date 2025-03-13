@@ -14,6 +14,7 @@ import Templates from './pages/Templates';
 import EditTemplate from './pages/EditTemplate';
 import Profile from './pages/Profile';
 import FinishedWorkout from './pages/FinishedWorkout';
+import Statistics from './pages/Statistics';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
               <Route path="/exercises" element={<Exercises />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/edit-template" element={<EditTemplate />} />
+              <Route path="/statistics" element={<Statistics />} />
             </Routes>
           </Router>
         </PersistedStateProvider>

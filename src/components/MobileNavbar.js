@@ -1,7 +1,7 @@
-// src/components/MobileNavbar.js
+// src/components/MobileNavbar.js - Enhanced with Statistics Page
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, History, PlusCircle, Dumbbell, Pencil } from 'lucide-react';
+import { Home, History, PlusCircle, Pencil, BarChart2 } from 'lucide-react';
 import { usePersistedState } from './PersistedStateProvider';
 import { useTheme } from './ThemeContext';
 
@@ -24,7 +24,7 @@ const MobileNavbar = () => {
     { icon: Home, label: 'Home', path: '/' },
     { icon: Pencil, label: 'Templates', path: '/templates' },
     { icon: PlusCircle, label: 'Workout', path: '/workout', onClick: handleWorkoutClick },
-    { icon: Dumbbell, label: 'Exercises', path: '/exercises' },
+    { icon: BarChart2, label: 'Stats', path: '/statistics' },
     { icon: History, label: 'History', path: '/history' },
   ];
 
