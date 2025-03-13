@@ -118,3 +118,260 @@
   background-color: #444;
   color: #ddd;
 }
+/* src/components/CustomCalendar.css */
+
+/* Base calendar styles */
+.react-calendar {
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  border-radius: 1rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.react-calendar__navigation {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
+}
+
+.react-calendar__navigation button {
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  min-width: 44px;
+  border: none;
+  outline: none;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.react-calendar__navigation__label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  flex-grow: 1;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.75rem 0;
+}
+
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.react-calendar__tile {
+  aspect-ratio: 1;
+  max-width: 100%;
+  text-align: center;
+  padding: 0.5rem 0;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.react-calendar__tile:enabled:hover {
+  color: currentColor;
+}
+
+.react-calendar__tile:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Light theme styles */
+.light-theme .react-calendar {
+  background: white;
+  color: #374151;
+}
+
+.light-theme .react-calendar__navigation button {
+  background: transparent;
+  color: #374151;
+}
+
+.light-theme .react-calendar__navigation button:enabled:hover,
+.light-theme .react-calendar__navigation button:enabled:focus {
+  background-color: #f3f4f6;
+}
+
+.light-theme .react-calendar__tile {
+  background: transparent;
+  color: #374151;
+}
+
+.light-theme .react-calendar__tile:enabled:hover,
+.light-theme .react-calendar__tile:enabled:focus {
+  background-color: #f3f4f6;
+}
+
+.light-theme .react-calendar__tile--now {
+  background: #e5e7eb;
+  font-weight: 700;
+}
+
+.light-theme .react-calendar__tile--now:enabled:hover,
+.light-theme .react-calendar__tile--now:enabled:focus {
+  background: #d1d5db;
+}
+
+.light-theme .react-calendar__tile--active {
+  background: #6366f1;
+  color: white;
+}
+
+.light-theme .react-calendar__tile--active:enabled:hover,
+.light-theme .react-calendar__tile--active:enabled:focus {
+  background: #4f46e5;
+}
+
+.light-theme .react-calendar__tile--gym-visit {
+  background: #6366f1;
+  color: white;
+}
+
+.light-theme .react-calendar__tile--gym-visit:enabled:hover,
+.light-theme .react-calendar__tile--gym-visit:enabled:focus {
+  background: #4f46e5;
+}
+
+.light-theme .react-calendar__tile--gym-today {
+  background: #10b981;
+  color: white;
+}
+
+.light-theme .react-calendar__tile--gym-today:enabled:hover,
+.light-theme .react-calendar__tile--gym-today:enabled:focus {
+  background: #059669;
+}
+
+/* Dark theme styles */
+.dark-theme .react-calendar {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.dark-theme .react-calendar__navigation button {
+  background: transparent;
+  color: #f1f5f9;
+}
+
+.dark-theme .react-calendar__navigation button:enabled:hover,
+.dark-theme .react-calendar__navigation button:enabled:focus {
+  background-color: #334155;
+}
+
+.dark-theme .react-calendar__tile {
+  background: transparent;
+  color: #f1f5f9;
+}
+
+.dark-theme .react-calendar__tile:enabled:hover,
+.dark-theme .react-calendar__tile:enabled:focus {
+  background-color: #334155;
+}
+
+.dark-theme .react-calendar__tile--now {
+  background: #334155;
+  font-weight: 700;
+}
+
+.dark-theme .react-calendar__tile--now:enabled:hover,
+.dark-theme .react-calendar__tile--now:enabled:focus {
+  background: #475569;
+}
+
+.dark-theme .react-calendar__tile--active {
+  background: #6366f1;
+  color: white;
+}
+
+.dark-theme .react-calendar__tile--active:enabled:hover,
+.dark-theme .react-calendar__tile--active:enabled:focus {
+  background: #4f46e5;
+}
+
+.dark-theme .react-calendar__tile--gym-visit {
+  background: #4f46e5;
+  color: white;
+  position: relative;
+}
+
+.dark-theme .react-calendar__tile--gym-visit:enabled:hover,
+.dark-theme .react-calendar__tile--gym-visit:enabled:focus {
+  background: #4338ca;
+}
+
+.dark-theme .react-calendar__tile--gym-today {
+  background: #10b981;
+  color: white;
+}
+
+.dark-theme .react-calendar__tile--gym-today:enabled:hover,
+.dark-theme .react-calendar__tile--gym-today:enabled:focus {
+  background: #059669;
+}
+
+/* Effects for indicating gym visits */
+.react-calendar__tile--gym-visit::after,
+.react-calendar__tile--gym-today::after {
+  content: "";
+  position: absolute;
+  bottom: 0.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: white;
+  opacity: 0.7;
+}
+
+/* Button immediate feedback styles */
+.react-calendar__navigation button:active {
+  transform: scale(0.96);
+}
+
+.react-calendar__tile:active {
+  transform: scale(0.95);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .react-calendar {
+    padding: 0.75rem;
+  }
+  
+  .react-calendar__navigation {
+    height: 40px;
+  }
+  
+  .react-calendar__month-view__weekdays__weekday {
+    padding: 0.5rem 0;
+  }
+  
+  .react-calendar__tile {
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+}
