@@ -1,70 +1,25 @@
-# Getting Started with Create React App
+Gym Tracker: Fitness Tracking App Gym Tracker is a comprehensive workout and fitness tracking application designed to help users monitor their gym progress, plan workouts, and maintain consistency in their fitness journey. Features Workout Tracking
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Active Workout Mode: Start, track, and record workouts in real-time Timer Functionality: Built-in timer for rest periods between sets Exercise Sets: Log weights and reps for each exercise Previous Workout Data: View your last workout's weights and reps for easy progression tracking
 
-## Available Scripts
+Workout History
 
-In the project directory, you can run:
+Calendar View: Visualize your gym attendance with a color-coded calendar Detailed History: Access comprehensive logs of past workouts including all exercises, sets, weights, and reps Workout Duration: Track how long each workout session lasted
 
-### `npm start`
+Workout Templates
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Custom Templates: Create and save workout routines for quick access Easy Start: Begin workouts instantly from your saved templates Template Management: Edit or delete templates as your routine evolves
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Exercise Library
 
-### `npm test`
+Comprehensive Database: Access a large collection of pre-defined exercises organized by muscle groups and equipment Custom Exercises: Add your own exercises to the database Search Functionality: Quickly find exercises by name
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+User Experience
 
-### `npm run build`
+Dark/Light Mode: Choose between themes based on your preference Profile Management: Upload a profile picture and manage your account Mobile-First Design: Optimized for mobile use in the gym Offline Functionality: Core features work even without an internet connection
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Authentication
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Email Registration: Create an account with email and password Google Sign-In: Quick access via Google authentication Account Security: Password verification for sensitive actions
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Technical Details The application is built with React and uses Firebase for authentication, data storage, and file storage. It employs a responsive design with Tailwind CSS for styling and includes various components for different app functionalities. The app features persistent state management to ensure workout data isn't lost if the app is closed or refreshed during an active workout.
