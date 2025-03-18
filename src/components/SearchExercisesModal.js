@@ -12,6 +12,7 @@ const SearchExercisesModal = ({
   shouldCloseOnOutsideClick = true,
   exercisesData,
   handleAddExercise,
+  modalZIndex = 50  // Default z-index value
 }) => {
   const { theme } = useTheme();
   const { currentUser } = useAuth();
@@ -91,6 +92,7 @@ const SearchExercisesModal = ({
       id="modal-backdrop"
       className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
       onClick={handleOutsideClick}
+      style={{ zIndex: modalZIndex }} // Apply the custom z-index
     >
       <div className={`rounded-md shadow-lg relative max-h-5/6 h-5/6 max-w-96 w-96 ${containerClass}`}>
         <div className="p-4 h-full overflow-y-auto">

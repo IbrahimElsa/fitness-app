@@ -113,13 +113,6 @@ function Templates() {
                         <p className={`${themeCss.secondaryText} mb-4`}>
                             Create templates to save your favorite workouts for quick access
                         </p>
-                        <button
-                            className={`flex items-center gap-2 py-2 px-4 rounded-lg mx-auto ${themeCss.primaryButton}`}
-                            onClick={handleCreateTemplate}
-                        >
-                            <PlusCircle size={16} />
-                            Create Your First Template
-                        </button>
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

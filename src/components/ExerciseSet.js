@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { useTheme } from "../components/ThemeContext";
-import { Plus, Minus, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemoveExercise }) => {
   const [localSets, setLocalSets] = useState(sets);
   const [prevWorkoutData, setPrevWorkoutData] = useState([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { theme, themeCss } = useTheme();
+  const { theme } = useTheme();
 
   useEffect(() => {
     setLocalSets(sets);

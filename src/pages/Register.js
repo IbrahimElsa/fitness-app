@@ -1,28 +1,47 @@
-// src/pages/Register.js
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+// src/pages/Register.js - Updated with return path support
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { register, loginWithGoogle } from '../firebaseAuthServices';
 import MobileNavbar from '../components/MobileNavbar';
-import { Lock, Mail, User } from 'lucide-react';
+import { Lock, Mail, AlertCircle } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from '../components/ThemeContext';
+import { useAuth } from '../AuthContext';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, themeCss } = useTheme();
+  const { currentUser } = useAuth();
+  
+  // Get return path from location state
+  const returnPath = location.state?.returnPath || '/';
+  const message = location.state?.message || '';
+
+  useEffect(() => {
+    if (currentUser) {
+      // Navigate to the return path if authenticated
+      navigate(returnPath);
+    }
+  }, [currentUser, navigate, returnPath]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     try {
       const user = await register(email, password);
       console.log('User created:', user);
-      navigate('/');
+      navigate(returnPath);
     } catch (error) {
       setError(error.message);
     }
@@ -33,7 +52,7 @@ const RegisterPage = () => {
     try {
       const user = await loginWithGoogle();
       console.log('Signed up with Google:', user);
-      navigate('/');
+      navigate(returnPath);
     } catch (error) {
       setError(error.message);
     }
@@ -50,6 +69,13 @@ const RegisterPage = () => {
             Join our fitness community and start tracking your workouts
           </p>
         </div>
+        
+        {message && (
+          <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg text-center flex items-center">
+            <AlertCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+            <p className="text-sm text-indigo-600 dark:text-indigo-400">{message}</p>
+          </div>
+        )}
         
         {error && (
           <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-lg text-center">
@@ -141,7 +167,11 @@ const RegisterPage = () => {
             <div className="text-center mt-6">
               <p className="text-slate-600 dark:text-slate-400">
                 Already have an account?{" "}
-                <Link to="/login" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
+                <Link 
+                  to="/login" 
+                  state={{ returnPath: returnPath }}
+                  className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                >
                   Sign in
                 </Link>
               </p>

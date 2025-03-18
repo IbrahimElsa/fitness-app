@@ -1,4 +1,4 @@
-// src/pages/Workout.js
+// src/pages/Workout.js - Updated with authentication check
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,7 +7,7 @@ import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, LogIn } from "lucide-react";
 
 function WorkoutPage() {
     const navigate = useNavigate();
@@ -19,6 +19,7 @@ function WorkoutPage() {
         return savedTemplates ? JSON.parse(savedTemplates) : [];
     });
     const [currentPage, setCurrentPage] = useState(0);
+    const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -40,11 +41,25 @@ function WorkoutPage() {
     }, [currentUser]);
 
     const startWorkout = () => {
+        if (!currentUser) {
+            // Show authentication prompt if user is not logged in
+            setShowAuthPrompt(true);
+            return;
+        }
         navigate('/active-workout', { state: { startTimer: true } });
     };
 
     const handleTemplateClick = (template) => {
+        if (!currentUser) {
+            // Show authentication prompt if user is not logged in
+            setShowAuthPrompt(true);
+            return;
+        }
         navigate("/active-workout", { state: { selectedExercises: template.exercises, startTimer: true } });
+    };
+
+    const navigateToLogin = () => {
+        navigate("/login", { state: { returnPath: "/workout" } });
     };
 
     const handleNextPage = () => {
@@ -87,27 +102,61 @@ function WorkoutPage() {
                 <h1 className="text-3xl text-center font-bold mb-6">Workout</h1>
                 
                 <div className="flex-1 flex flex-col justify-center items-center">
-                    <motion.div
-                        className="relative flex justify-center items-center my-8"
-                        onClick={startWorkout}
-                    >
+                    {showAuthPrompt ? (
                         <motion.div
-                            className="absolute w-56 h-56 rounded-full bg-indigo-500/50 dark:bg-indigo-600/30"
-                            variants={rippleVariants}
-                            initial="start"
-                            animate="end"
-                        />
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="relative z-10 flex justify-center items-center w-48 h-48 bg-gradient-to-br from-indigo-600 to-violet-600 text-center font-bold rounded-full cursor-pointer shadow-lg text-white"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`p-6 rounded-lg text-center max-w-md mx-auto mb-8 ${theme === 'light' ? 'bg-indigo-50 border border-indigo-100' : 'bg-indigo-900/20 border border-indigo-800'}`}
                         >
-                            <div className="flex flex-col items-center justify-center">
-                                <Play className="w-12 h-12 mb-2" />
-                                <span className="text-2xl">START</span>
+                            <h2 className="text-xl font-bold mb-3">Sign In Required</h2>
+                            <p className={`mb-4 ${themeCss.secondaryText}`}>
+                                You need to sign in or create an account to track your workouts and save your progress.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                <button
+                                    onClick={navigateToLogin}
+                                    className={`flex items-center justify-center gap-2 py-2 px-5 rounded-lg ${themeCss.primaryButton}`}
+                                >
+                                    <LogIn size={18} />
+                                    Sign In
+                                </button>
+                                <button
+                                    onClick={() => navigate("/register")}
+                                    className={`flex items-center justify-center gap-2 py-2 px-5 rounded-lg ${themeCss.secondaryButton}`}
+                                >
+                                    Create Account
+                                </button>
+                                <button
+                                    onClick={() => setShowAuthPrompt(false)}
+                                    className="py-2 px-5 text-slate-600 dark:text-slate-400 hover:underline"
+                                >
+                                    Cancel
+                                </button>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    ) : (
+                        <motion.div
+                            className="relative flex justify-center items-center my-8"
+                            onClick={startWorkout}
+                        >
+                            <motion.div
+                                className="absolute w-56 h-56 rounded-full bg-indigo-500/50 dark:bg-indigo-600/30"
+                                variants={rippleVariants}
+                                initial="start"
+                                animate="end"
+                            />
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="relative z-10 flex justify-center items-center w-48 h-48 bg-gradient-to-br from-indigo-600 to-violet-600 text-center font-bold rounded-full cursor-pointer shadow-lg text-white"
+                            >
+                                <div className="flex flex-col items-center justify-center">
+                                    <Play className="w-12 h-12 mb-2" />
+                                    <span className="text-2xl">START</span>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
                 </div>
             </div>
 
