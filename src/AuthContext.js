@@ -11,11 +11,13 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true); // Add loading state to track auth initialization
     const auth = getAuth();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
+            setLoading(false); // Mark loading as complete once auth state is determined
         });
 
         return unsubscribe;
@@ -27,8 +29,8 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         currentUser,
+        loading, // Include loading in the context value
         logout,
-        // No longer providing deleteUser here
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

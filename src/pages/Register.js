@@ -1,9 +1,9 @@
-// src/pages/Register.js - Updated with return path support
+// src/pages/Register.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { register, loginWithGoogle } from '../firebaseAuthServices';
 import MobileNavbar from '../components/MobileNavbar';
-import { Lock, Mail, AlertCircle } from 'lucide-react';
+import { Lock, Mail, User } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from '../components/ThemeContext';
@@ -14,34 +14,33 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const location = useLocation();
   const { theme, themeCss } = useTheme();
-  const { currentUser } = useAuth();
-  
-  // Get return path from location state
-  const returnPath = location.state?.returnPath || '/';
-  const message = location.state?.message || '';
+  const { currentUser, loading } = useAuth();
 
   useEffect(() => {
-    if (currentUser) {
-      // Navigate to the return path if authenticated
-      navigate(returnPath);
+    // Only redirect after auth state is fully loaded
+    if (!loading && currentUser) {
+      // Check if there's an active workout
+      const savedIsActive = localStorage.getItem("isActive");
+      const activeWorkoutData = localStorage.getItem("activeWorkout");
+      
+      if (savedIsActive === "true" || (activeWorkoutData && JSON.parse(activeWorkoutData).isActive)) {
+        // Redirect to active workout if there is one
+        navigate('/active-workout');
+      } else {
+        // Otherwise go to home
+        navigate('/');
+      }
     }
-  }, [currentUser, navigate, returnPath]);
+  }, [currentUser, loading, navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
     try {
       const user = await register(email, password);
       console.log('User created:', user);
-      navigate(returnPath);
     } catch (error) {
       setError(error.message);
     }
@@ -52,11 +51,19 @@ const RegisterPage = () => {
     try {
       const user = await loginWithGoogle();
       console.log('Signed up with Google:', user);
-      navigate(returnPath);
     } catch (error) {
       setError(error.message);
     }
   };
+
+  // If still loading auth state, show a loading indicator
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-900 dark:to-indigo-950 flex flex-col items-center pt-16 px-4 sm:px-6 lg:px-8">
@@ -69,13 +76,6 @@ const RegisterPage = () => {
             Join our fitness community and start tracking your workouts
           </p>
         </div>
-        
-        {message && (
-          <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg text-center flex items-center">
-            <AlertCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
-            <p className="text-sm text-indigo-600 dark:text-indigo-400">{message}</p>
-          </div>
-        )}
         
         {error && (
           <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-lg text-center">
@@ -167,11 +167,7 @@ const RegisterPage = () => {
             <div className="text-center mt-6">
               <p className="text-slate-600 dark:text-slate-400">
                 Already have an account?{" "}
-                <Link 
-                  to="/login" 
-                  state={{ returnPath: returnPath }}
-                  className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
-                >
+                <Link to="/login" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium">
                   Sign in
                 </Link>
               </p>

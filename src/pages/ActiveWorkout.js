@@ -16,33 +16,35 @@ function ActiveWorkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth(); // Get loading state from auth context
   const { state, setState, clearState } = usePersistedState();
-  const [isLoading, setIsLoading] = useState(true);
+
+  const selectedExercises = state.selectedExercises || [];
+  const localExerciseData = state.localExerciseData || [];
+  const { startTime, isActive, showActiveWorkoutModal, showCancelModal } = state;
+
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
     const savedTimeLeft = localStorage.getItem("timeLeft");
     return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
   });
 
-  // Authentication check and redirect
+  // Auth checking effect - only redirect if we're sure the user isn't authenticated
   useEffect(() => {
-    if (!currentUser) {
-      navigate("/login", { 
-        state: { 
-          returnPath: "/workout",
-          message: "You need to sign in to track your workouts" 
-        } 
-      });
-    } else {
-      setIsLoading(false);
+    // Only check auth after loading is complete
+    if (!loading) {
+      // Check if there's an active workout
+      const hasActiveWorkout = localStorage.getItem("isActive") === "true" || 
+                               JSON.parse(localStorage.getItem("activeWorkout") || "{}").isActive === true;
+      
+      // Only redirect to login if no user AND no active workout
+      if (!currentUser && !hasActiveWorkout) {
+        navigate('/login');
+      }
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, loading, navigate]);
 
-  // Load saved workout data
   useEffect(() => {
-    if (!currentUser) return;
-    
     const savedStartTime = localStorage.getItem("startTime");
     const savedIsActive = localStorage.getItem("isActive");
 
@@ -69,12 +71,9 @@ function ActiveWorkout() {
       localStorage.setItem("startTime", JSON.stringify(currentTime));
       localStorage.setItem("isActive", JSON.stringify(true));
     }
-  }, [location.state, setState, currentUser]);
+  }, [location.state, setState]);
 
-  // Timer update effect
   useEffect(() => {
-    if (!currentUser) return;
-    
     const updateTimer = () => {
       if (state.startTime && state.isActive) {
         const currentTime = Date.now();
@@ -90,15 +89,12 @@ function ActiveWorkout() {
     updateTimer(); // Call immediately to set the correct time initially
 
     return () => clearInterval(interval);
-  }, [state.startTime, state.isActive, setState, currentUser]);
+  }, [state.startTime, state.isActive, setState]);
 
-  // Save state before unload
   useEffect(() => {
-    if (!currentUser) return;
-    
     const handleBeforeUnload = () => {
       localStorage.setItem("timer", JSON.stringify(state.timer));
-      localStorage.setItem("isActive", JSON.stringify(state.isActive));
+      localStorage.setItem("isActive", JSON.stringify(isActive));
       localStorage.setItem("startTime", JSON.stringify(state.startTime));
     };
 
@@ -106,7 +102,7 @@ function ActiveWorkout() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [state.isActive, state.timer, state.startTime, currentUser]);
+  }, [isActive, state.timer, state.startTime]);
 
   const openActiveWorkoutModal = () => {
     setState((prevState) => ({
@@ -154,13 +150,18 @@ function ActiveWorkout() {
 
   const handleFinishWorkout = async () => {
     try {
+      if (!currentUser) {
+        console.error("No user is logged in");
+        return;
+      }
+      
       const userId = currentUser.uid;
       const workoutsCollectionRef = collection(db, "users", userId, "workouts");
       const querySnapshot = await getDocs(workoutsCollectionRef);
       const workoutCount = querySnapshot.size;
       const newWorkoutDocRef = doc(workoutsCollectionRef, `workout ${workoutCount + 1}`);
       const endTime = Date.now();
-      const durationInMilliseconds = endTime - state.startTime;
+      const durationInMilliseconds = endTime - startTime;
       const durationInSeconds = Math.floor(durationInMilliseconds / 1000);
       const durationString = `${Math.floor(durationInSeconds / 3600).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${Math.floor(
         (durationInSeconds % 3600) / 60
@@ -168,7 +169,7 @@ function ActiveWorkout() {
 
       const workoutData = {
         duration: durationString,
-        exercises: state.localExerciseData.map((exercise) => ({
+        exercises: localExerciseData.map((exercise) => ({
           Category: exercise.Category,
           Muscle: exercise.Muscle,
           Name: exercise.Name,
@@ -187,6 +188,7 @@ function ActiveWorkout() {
       localStorage.removeItem("timer");
       localStorage.removeItem("timeLeft");
       localStorage.removeItem("startTime");
+      localStorage.removeItem("isActive");
       navigate("/finished-workout");
     } catch (error) {
       console.error("Error adding workout: ", error);
@@ -198,6 +200,7 @@ function ActiveWorkout() {
     localStorage.removeItem("timer");
     localStorage.removeItem("timeLeft");
     localStorage.removeItem("startTime");
+    localStorage.removeItem("isActive");
     navigate("/");
   };
 
@@ -231,112 +234,105 @@ function ActiveWorkout() {
     return `${minutes.toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
   };
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className={`flex items-center justify-center min-h-screen ${theme === "light" ? "bg-white" : "bg-gray-900"}`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
-
   return (
     <div className={`active-workout-page min-h-screen ${theme === "light" ? "bg-white text-black" : "bg-gray-900 text-white"} flex flex-col pb-16`}>
-      <div className={`w-full flex justify-between p-4 ${theme === "light" ? "bg-white" : "bg-gray-800"} shadow-md`}>
-        <button
-          className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
-          onClick={() => setIsTimerModalOpen(true)}
-        >
-          {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
-        </button>
-        <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === "light" ? "text-gray-800" : "text-white"}`}>
-          {state.timer >= 3600 && `${Math.floor(state.timer / 3600)}:`}
-          {Math.floor((state.timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
-          {(state.timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
+      {/* Loading state */}
+      {loading ? (
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
         </div>
-        <button
-          className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
-          onClick={handleFinishWorkout}
-        >
-          FINISH
-        </button>
-      </div>
-      
-      {state.selectedExercises.length === 0 && (
-        <div className="flex flex-col items-center">
-          <button
-            className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white mt-4"
-            onClick={openActiveWorkoutModal}
-          >
-            ADD EXERCISE
-          </button>
-          <button
-            className="self-center py-2 px-4 w-[45vw] bg-red-600 hover:bg-red-700 focus:outline-none rounded-full text-white mt-4"
-            onClick={handleCancelWorkout}
-          >
-            CANCEL WORKOUT
-          </button>
-        </div>
-      )}
-      
-      {state.selectedExercises.map((exercise, index) => (
-        <ExerciseSet
-          key={index}
-          exercise={exercise}
-          sets={state.localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
-          handleSetChange={handleSetChange}
-          handleRemoveExercise={handleRemoveExercise}
-          currentUser={currentUser}
-        />
-      ))}
-      
-      {state.selectedExercises.length > 0 && (
+      ) : (
         <>
-          <button
-            className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white mt-4"
-            onClick={openActiveWorkoutModal}
-          >
-            ADD MORE EXERCISES
-          </button>
-          <button
-            className="self-center py-2 px-4 w-[45vw] bg-red-600 hover:bg-red-700 focus:outline-none rounded-full text-white mt-4"
-            onClick={handleCancelWorkout}
-          >
-            CANCEL WORKOUT
-          </button>
+          <div className={`w-full flex justify-between p-4 ${theme === "light" ? "bg-white" : "bg-gray-800"} shadow-md`}>
+            <button
+              className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
+              onClick={() => setIsTimerModalOpen(true)}
+            >
+              {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
+            </button>
+            <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === "light" ? "text-gray-800" : "text-white"}`}>
+              {state.timer >= 3600 && `${Math.floor(state.timer / 3600)}:`}
+              {Math.floor((state.timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
+              {(state.timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
+            </div>
+            <button
+              className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
+              onClick={handleFinishWorkout}
+            >
+              FINISH
+            </button>
+          </div>
+          {selectedExercises.length === 0 && (
+            <div className="flex flex-col items-center">
+              <button
+                className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white mt-4"
+                onClick={openActiveWorkoutModal}
+              >
+                ADD EXERCISE
+              </button>
+              <button
+                className="self-center py-2 px-4 w-[45vw] bg-red-600 hover:bg-red-700 focus:outline-none rounded-full text-white mt-4"
+                onClick={handleCancelWorkout}
+              >
+                CANCEL WORKOUT
+              </button>
+            </div>
+          )}
+          {selectedExercises.map((exercise, index) => (
+            <ExerciseSet
+              key={index}
+              exercise={exercise}
+              sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
+              handleSetChange={handleSetChange}
+              handleRemoveExercise={handleRemoveExercise}
+              currentUser={currentUser}
+            />
+          ))}
+          {selectedExercises.length > 0 && (
+            <>
+              <button
+                className="self-center py-2 px-4 w-[45vw] bg-blue-600 hover:bg-blue-700 focus:outline-none rounded-full text-white mt-4"
+                onClick={openActiveWorkoutModal}
+              >
+                ADD MORE EXERCISES
+              </button>
+              <button
+                className="self-center py-2 px-4 w-[45vw] bg-red-600 hover:bg-red-700 focus:outline-none rounded-full text-white mt-4"
+                onClick={handleCancelWorkout}
+              >
+                CANCEL WORKOUT
+              </button>
+            </>
+          )}
+          {showActiveWorkoutModal && (
+            <ActiveWorkoutModal
+              show={showActiveWorkoutModal}
+              onClose={closeActiveWorkoutModal}
+              exercisesData={exercisesData}
+              title="Add Exercise"
+              handleAddExercise={handleAddExercise}
+            />
+          )}
+          {showCancelModal && (
+            <CancelModal
+              onConfirm={confirmCancelWorkout}
+              onClose={() =>
+                setState((prevState) => ({
+                  ...prevState,
+                  showCancelModal: false,
+                }))
+              }
+            />
+          )}
+          <MobileNavbar />
+          <TimerModal
+            isOpen={isTimerModalOpen}
+            onClose={() => setIsTimerModalOpen(false)}
+            timeLeft={timeLeft}
+            setTimeLeft={setTimeLeft}
+          />
         </>
       )}
-      
-      {state.showActiveWorkoutModal && (
-        <ActiveWorkoutModal
-          show={state.showActiveWorkoutModal}
-          onClose={closeActiveWorkoutModal}
-          exercisesData={exercisesData}
-          title="Add Exercise"
-          handleAddExercise={handleAddExercise}
-        />
-      )}
-      
-      {state.showCancelModal && (
-        <CancelModal
-          onConfirm={confirmCancelWorkout}
-          onClose={() =>
-            setState((prevState) => ({
-              ...prevState,
-              showCancelModal: false,
-            }))
-          }
-        />
-      )}
-      
-      <MobileNavbar />
-      
-      <TimerModal
-        isOpen={isTimerModalOpen}
-        onClose={() => setIsTimerModalOpen(false)}
-        timeLeft={timeLeft}
-        setTimeLeft={setTimeLeft}
-      />
     </div>
   );
 }
