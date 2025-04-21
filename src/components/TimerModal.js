@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../components/ThemeContext";
 
 const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
@@ -7,9 +7,34 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
 
   // We'll keep track of the last "full minute" we used for sending
   // a time-update notification so we don't spam notifications every second.
-  // If you want them more frequently, adjust this logic.
-  const lastMinuteRef = useRef(null); // NEW
+  const lastMinuteRef = useRef(null);
+  
+  // Clean up function to properly reset all timer resources
+  const cleanupTimer = useCallback(() => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    localStorage.removeItem("timerEndTime");
+  }, []);
 
+  // Load timer state from localStorage
+  const loadTimerState = useCallback(() => {
+    const savedEndTime = localStorage.getItem("timerEndTime");
+    if (savedEndTime) {
+      const now = Date.now();
+      const end = parseInt(savedEndTime, 10);
+      if (end > now) {
+        const remainingTime = Math.ceil((end - now) / 1000);
+        setTimeLeft(remainingTime);
+      } else {
+        setTimeLeft(0);
+        cleanupTimer();
+      }
+    }
+  }, [setTimeLeft, cleanupTimer]);
+
+  // Initialize notifications and load timer state
   useEffect(() => {
     const requestNotificationPermission = async () => {
       if (Notification.permission === "default") {
@@ -18,31 +43,36 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
     };
 
     requestNotificationPermission();
-
-    const loadTimerState = () => {
-      const savedEndTime = localStorage.getItem("timerEndTime");
-      if (savedEndTime) {
-        const now = Date.now();
-        const end = parseInt(savedEndTime, 10);
-        if (end > now) {
-          const remainingTime = Math.ceil((end - now) / 1000);
-          setTimeLeft(remainingTime);
-        } else {
-          setTimeLeft(0);
-          localStorage.removeItem("timerEndTime");
-        }
-      }
-    };
-
     loadTimerState();
 
-    if (timeLeft > 0 && intervalRef.current === null) {
+    // Add a beforeunload event listener to ensure state is saved when tab closes
+    const handleBeforeUnload = () => {
+      if (timeLeft > 0) {
+        const endTime = Date.now() + (timeLeft * 1000);
+        localStorage.setItem("timerEndTime", endTime.toString());
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [loadTimerState, timeLeft]);
+
+  // Timer interval setup and management
+  useEffect(() => {
+    // If timer is already running, clear it before setting up a new one
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (timeLeft > 0) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((prevTimeLeft) => {
           if (prevTimeLeft <= 1) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-            localStorage.removeItem("timerEndTime");
+            cleanupTimer();
             // Timer is done
             sendNotification("Timer Complete", "Your timer has finished!", "timer-notification");
             return 0;
@@ -50,9 +80,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
 
           const newTimeLeft = prevTimeLeft - 1;
 
-          // Let's send a time-update notification each time we cross a new minute
-          // OR if the timeLeft is < 60, so the user sees the final countdown.
-          // You can tweak this logic for your UX needs.
+          // Send time-update notifications at appropriate intervals
           const minutes = Math.floor(newTimeLeft / 60);
           const seconds = newTimeLeft % 60;
 
@@ -61,8 +89,8 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
             (seconds === 0 || newTimeLeft < 60)
           ) {
             // Only send once per new "minutes" value,
-            // or if we have < 60 seconds left, we can send every second.
-            if (newTimeLeft < 60 || lastMinuteRef.current !== minutes) {
+            // or if we have < 60 seconds left, we can send every 15 seconds to avoid spam
+            if ((newTimeLeft < 60 && seconds % 15 === 0) || lastMinuteRef.current !== minutes) {
               lastMinuteRef.current = minutes;
               sendNotification(
                 "Time Update",
@@ -83,14 +111,14 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
         intervalRef.current = null;
       }
     };
-  }, [timeLeft, setTimeLeft]);
+  }, [timeLeft, setTimeLeft, cleanupTimer]);
 
   const sendNotification = (title, body, tag) => {
     if (Notification.permission === "granted") {
       new Notification(title, {
         body,
-        tag,        // NEW: Provide a tag so the OS/browser can group or replace
-        renotify: true, // NEW: Allows the notification to update rather than stack
+        tag,        // Provide a tag so the OS/browser can group or replace
+        renotify: true, // Allows the notification to update rather than stack
       });
     }
   };
@@ -114,13 +142,17 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
   const adjustTime = (seconds) => {
     setTimeLeft((prevTime) => {
       const newTimeLeft = Math.max((prevTime || 0) + seconds, 0);
-      const newEndTime = Date.now() + newTimeLeft * 1000;
-      localStorage.setItem("timerEndTime", newEndTime.toString());
+      if (newTimeLeft === 0) {
+        localStorage.removeItem("timerEndTime");
+      } else {
+        const newEndTime = Date.now() + newTimeLeft * 1000;
+        localStorage.setItem("timerEndTime", newEndTime.toString());
+      }
       return newTimeLeft;
     });
   };
 
-  // Keep your existing formatTime function
+  // Format time function
   const formatTime = (seconds) => {
     if (seconds === null || seconds === undefined) return "00:00";
     const minutes = Math.floor(seconds / 60);
