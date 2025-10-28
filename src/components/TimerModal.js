@@ -73,8 +73,6 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
         setTimeLeft((prevTimeLeft) => {
           if (prevTimeLeft <= 1) {
             cleanupTimer();
-            // Timer is done
-            sendNotification("Timer Complete", "Your timer has finished!", "timer-notification");
             return 0;
           }
 
@@ -88,9 +86,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
             Notification.permission === "granted" &&
             (seconds === 0 || newTimeLeft < 60)
           ) {
-            // Only send once per new "minutes" value,
-            // or if we have < 60 seconds left, we can send every 15 seconds to avoid spam
-            if ((newTimeLeft < 60 && seconds % 15 === 0) || lastMinuteRef.current !== minutes) {
+            if ((newTimeLeft == 60) || lastMinuteRef.current !== minutes) {
               lastMinuteRef.current = minutes;
               sendNotification(
                 "Time Update",

@@ -5,8 +5,6 @@ import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
 import CustomCalendar from "../components/CustomCalendar";
 import { useAuth } from "../AuthContext";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
 import { getDocs, collection, query, getDoc, doc, orderBy, limit } from 'firebase/firestore';
 import { db } from "../firebaseConfig";
