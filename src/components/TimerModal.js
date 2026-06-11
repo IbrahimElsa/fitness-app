@@ -1,6 +1,16 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../components/ThemeContext";
 
+// Format time function
+const formatTime = (seconds) => {
+  if (seconds === null || seconds === undefined) return "00:00";
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes.toLocaleString(undefined, {
+    minimumIntegerDigits: 2,
+  })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
+};
+
 const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
   const { theme, themeCss } = useTheme();
   const intervalRef = useRef(null);
@@ -8,7 +18,11 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
   // We'll keep track of the last "full minute" we used for sending
   // a time-update notification so we don't spam notifications every second.
   const lastMinuteRef = useRef(null);
-  
+
+  // Previous timeLeft value, so the notification effect below only reacts
+  // to real 1-second countdown ticks (not user adjustments or re-syncs).
+  const prevTimeLeftRef = useRef(timeLeft);
+
   // Clean up function to properly reset all timer resources
   const cleanupTimer = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -16,6 +30,24 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
       intervalRef.current = null;
     }
     localStorage.removeItem("timerEndTime");
+  }, []);
+
+  // Notifications must never crash the app: window.Notification doesn't exist
+  // on iOS Safari, and new Notification() throws on Android Chrome even when
+  // permission is granted (mobile requires a service worker to show them).
+  const sendNotification = useCallback((title, body, tag) => {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      return;
+    }
+    try {
+      new Notification(title, {
+        body,
+        tag,        // Provide a tag so the OS/browser can group or replace
+        renotify: true, // Allows the notification to update rather than stack
+      });
+    } catch (error) {
+      console.warn("Unable to show notification:", error);
+    }
   }, []);
 
   // Load timer state from localStorage
@@ -37,7 +69,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
   // Initialize notifications and load timer state
   useEffect(() => {
     const requestNotificationPermission = async () => {
-      if (Notification.permission === "default") {
+      if ("Notification" in window && Notification.permission === "default") {
         await Notification.requestPermission();
       }
     };
@@ -60,6 +92,22 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
     };
   }, [loadTimerState, timeLeft]);
 
+  // Re-sync the countdown from the saved end time when the user returns to
+  // the app. beforeunload doesn't fire on mobile when switching apps, and
+  // intervals are throttled in the background, so timeLeft can be stale.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadTimerState();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [loadTimerState]);
+
   // Timer interval setup and management
   useEffect(() => {
     // If timer is already running, clear it before setting up a new one
@@ -70,38 +118,9 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
 
     if (timeLeft > 0) {
       intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTimeLeft) => {
-          if (prevTimeLeft <= 1) {
-            cleanupTimer();
-            // Timer is done
-            sendNotification("Timer Complete", "Your timer has finished!", "timer-notification");
-            return 0;
-          }
-
-          const newTimeLeft = prevTimeLeft - 1;
-
-          // Send time-update notifications at appropriate intervals
-          const minutes = Math.floor(newTimeLeft / 60);
-          const seconds = newTimeLeft % 60;
-
-          if (
-            Notification.permission === "granted" &&
-            (seconds === 0 || newTimeLeft < 60)
-          ) {
-            // Only send once per new "minutes" value,
-            // or if we have < 60 seconds left, we can send every 15 seconds to avoid spam
-            if ((newTimeLeft < 60 && seconds % 15 === 0) || lastMinuteRef.current !== minutes) {
-              lastMinuteRef.current = minutes;
-              sendNotification(
-                "Time Update",
-                `${formatTime(newTimeLeft)} remaining`,
-                "timer-notification"
-              );
-            }
-          }
-
-          return newTimeLeft;
-        });
+        // Keep the updater pure; notifications and cleanup happen in the
+        // tick effect below so an error here can't unmount the whole app.
+        setTimeLeft((prevTimeLeft) => Math.max((prevTimeLeft || 0) - 1, 0));
       }, 1000);
     }
 
@@ -111,17 +130,42 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
         intervalRef.current = null;
       }
     };
-  }, [timeLeft, setTimeLeft, cleanupTimer]);
+  }, [timeLeft, setTimeLeft]);
 
-  const sendNotification = (title, body, tag) => {
-    if (Notification.permission === "granted") {
-      new Notification(title, {
-        body,
-        tag,        // Provide a tag so the OS/browser can group or replace
-        renotify: true, // Allows the notification to update rather than stack
-      });
+  // React to countdown ticks: finish the timer and send progress notifications
+  useEffect(() => {
+    const prevTimeLeft = prevTimeLeftRef.current;
+    prevTimeLeftRef.current = timeLeft;
+
+    // Only act on a normal 1-second tick, matching the old interval behavior
+    if (prevTimeLeft === null || timeLeft === null || prevTimeLeft - timeLeft !== 1) {
+      return;
     }
-  };
+
+    if (timeLeft === 0) {
+      cleanupTimer();
+      // Timer is done
+      sendNotification("Timer Complete", "Your timer has finished!", "timer-notification");
+      return;
+    }
+
+    // Send time-update notifications at appropriate intervals
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+
+    if (seconds === 0 || timeLeft < 60) {
+      // Only send once per new "minutes" value,
+      // or if we have < 60 seconds left, we can send every 15 seconds to avoid spam
+      if ((timeLeft < 60 && seconds % 15 === 0) || lastMinuteRef.current !== minutes) {
+        lastMinuteRef.current = minutes;
+        sendNotification(
+          "Time Update",
+          `${formatTime(timeLeft)} remaining`,
+          "timer-notification"
+        );
+      }
+    }
+  }, [timeLeft, cleanupTimer, sendNotification]);
 
   const handleTimeSelection = (minutes) => {
     const newTimeLeft = minutes * 60;
@@ -130,13 +174,11 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
     localStorage.setItem("timerEndTime", newEndTime.toString());
 
     // Send an immediate notification about the newly set timer
-    if (Notification.permission === "granted") {
-      sendNotification(
-        "Timer Started",
-        `Your timer is set for ${formatTime(newTimeLeft)}.`,
-        "timer-notification"
-      );
-    }
+    sendNotification(
+      "Timer Started",
+      `Your timer is set for ${formatTime(newTimeLeft)}.`,
+      "timer-notification"
+    );
   };
 
   const adjustTime = (seconds) => {
@@ -150,16 +192,6 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
       }
       return newTimeLeft;
     });
-  };
-
-  // Format time function
-  const formatTime = (seconds) => {
-    if (seconds === null || seconds === undefined) return "00:00";
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes.toLocaleString(undefined, {
-      minimumIntegerDigits: 2,
-    })}:${secs.toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
   };
 
   if (!isOpen) return null;
