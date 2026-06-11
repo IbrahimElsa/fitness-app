@@ -1,10 +1,11 @@
 // src/pages/History.js
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import MobileNavbar from "../components/MobileNavbar";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../components/ThemeContext";
 import { db } from '../firebaseConfig';
-import { collection, query, orderBy, limit, startAfter, onSnapshot, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, limit, startAfter, onSnapshot, getDocs } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
 import { Calendar, Clock, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +23,8 @@ function HistoryPage() {
     const [loading, setLoading] = useState(false);
     const [hasMoreWorkouts, setHasMoreWorkouts] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const dateParam = searchParams.get('date'); // 'YYYY-MM-DD' from the calendar
     const observer = useRef();
 
     const loadMoreWorkouts = useCallback(async () => {
@@ -73,6 +76,34 @@ function HistoryPage() {
         setLoading(true);
 
         const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
+
+        if (dateParam) {
+            // One-off fetch of the selected day's workouts. Timestamps are stored as
+            // ISO strings, so a lexicographic range covers the local day.
+            const [year, month, day] = dateParam.split('-').map(Number);
+            const dayStart = new Date(year, month - 1, day).toISOString();
+            const dayEnd = new Date(year, month - 1, day + 1).toISOString();
+            const dayQuery = query(
+                workoutsRef,
+                where("timestamp", ">=", dayStart),
+                where("timestamp", "<", dayEnd),
+                orderBy("timestamp", "desc")
+            );
+
+            getDocs(dayQuery)
+                .then((snapshot) => {
+                    setWorkouts(snapshot.docs.map(docToWorkout));
+                    setHasMoreWorkouts(false);
+                    setLoading(false);
+                })
+                .catch((error) => {
+                    console.error("Error fetching workouts for date:", error);
+                    setLoading(false);
+                });
+            return;
+        }
+
+        setHasMoreWorkouts(true);
         const q = query(workoutsRef, orderBy("timestamp", "desc"), limit(8));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -99,7 +130,8 @@ function HistoryPage() {
         });
 
         return () => unsubscribe();
-    }, [currentUser]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser, dateParam]);
 
     const docToWorkout = (doc) => {
         const data = doc.data();
@@ -168,9 +200,9 @@ function HistoryPage() {
             <div className="container mx-auto px-4 py-6 pb-24">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Workout History</h1>
-                    
+
                     {/* Month filter */}
-                    {availableMonths.length > 0 && (
+                    {!dateParam && availableMonths.length > 0 && (
                         <div className="relative max-w-xs">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Filter className="h-4 w-4 text-slate-400" />
@@ -193,14 +225,37 @@ function HistoryPage() {
                     )}
                 </div>
 
+                {/* Selected day banner (from calendar click) */}
+                {dateParam && (
+                    <div className={`${theme === 'light' ? themeCss.cardLight : themeCss.cardDark} rounded-xl p-4 mb-6 flex items-center justify-between`}>
+                        <p className="text-sm font-medium">
+                            Showing workouts for{" "}
+                            {(() => {
+                                const [year, month, day] = dateParam.split('-').map(Number);
+                                return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+                                    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+                                });
+                            })()}
+                        </p>
+                        <button
+                            onClick={() => setSearchParams({})}
+                            className={`px-3 py-1.5 text-sm rounded-lg ${themeCss.secondaryButton}`}
+                        >
+                            Show all
+                        </button>
+                    </div>
+                )}
+
                 {/* Empty state */}
                 {filteredWorkouts.length === 0 && !loading && (
                     <div className={`${theme === 'light' ? themeCss.cardLight : themeCss.cardDark} rounded-xl p-8 text-center`}>
                         <Calendar className="h-12 w-12 mx-auto mb-3 text-slate-400" />
                         <h3 className="text-xl font-semibold mb-2">No Workouts Found</h3>
                         <p className={`${themeCss.secondaryText} mb-4`}>
-                            {selectedMonth 
-                                ? `You don't have any workouts logged for ${selectedMonth}.` 
+                            {dateParam
+                                ? "You don't have any workouts logged for this day."
+                                : selectedMonth
+                                ? `You don't have any workouts logged for ${selectedMonth}.`
                                 : "You haven't logged any workouts yet."}
                         </p>
                         {selectedMonth && (
@@ -287,7 +342,7 @@ function HistoryPage() {
                                                                     <tr key={setIdx} className={`${
                                                                         setIdx % 2 === 0
                                                                             ? theme === 'light' ? 'bg-white' : 'bg-slate-800'
-                                                                            : theme === 'light' ? 'bg-slate-50' : 'bg-slate-750'
+                                                                            : theme === 'light' ? 'bg-slate-50' : 'bg-slate-700/50'
                                                                     }`}>
                                                                         <td className="px-3 py-2 whitespace-nowrap text-sm">{setIdx + 1}</td>
                                                                         <td className="px-3 py-2 whitespace-nowrap text-sm">{set.weight} lb</td>

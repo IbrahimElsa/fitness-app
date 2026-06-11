@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, loginWithGoogle } from '../firebaseAuthServices';
 import { useAuth } from '../AuthContext';
+import { usePersistedState } from '../components/PersistedStateProvider';
 import MobileNavbar from '../components/MobileNavbar';
 import { Lock, Mail } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,23 +15,15 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { currentUser, loading } = useAuth();
+  const { state: workoutState } = usePersistedState();
 
   useEffect(() => {
     // Only redirect after auth state is fully loaded
     if (!loading && currentUser) {
-      // Check if there's an active workout
-      const savedIsActive = localStorage.getItem("isActive");
-      const activeWorkoutData = localStorage.getItem("activeWorkout");
-      
-      if (savedIsActive === "true" || (activeWorkoutData && JSON.parse(activeWorkoutData).isActive)) {
-        // Redirect to active workout if there is one
-        navigate('/active-workout');
-      } else {
-        // Otherwise go to home
-        navigate('/');
-      }
+      // Resume an active workout if there is one, otherwise go home
+      navigate(workoutState.isActive ? '/active-workout' : '/');
     }
-  }, [currentUser, loading, navigate]);
+  }, [currentUser, loading, workoutState.isActive, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

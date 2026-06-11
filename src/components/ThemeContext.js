@@ -71,7 +71,7 @@ export const ThemeProvider = ({ children }) => {
     tableRowEvenLight: 'bg-white',
     tableRowEvenDark: 'bg-slate-800',
     tableRowOddLight: 'bg-slate-50',
-    tableRowOddDark: 'bg-slate-750',
+    tableRowOddDark: 'bg-slate-700/50',
     
     // Form elements
     formLabelLight: 'text-slate-700',

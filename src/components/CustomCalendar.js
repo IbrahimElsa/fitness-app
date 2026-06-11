@@ -31,8 +31,8 @@ const CustomCalendar = ({ gymVisits }) => {
   };
 
   const handleDayClick = (date) => {
-    // Format the date as 'YYYY-MM-DD'
-    const formattedDate = date.toISOString().split('T')[0];
+    // Format the date as 'YYYY-MM-DD' in local time (toISOString would shift the day in some timezones)
+    const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     // Navigate to the history page with the selected date
     navigate(`/history?date=${formattedDate}`);
   };

@@ -1,72 +1,30 @@
 // src/components/ExerciseSet.js
-import React, { useState, useEffect } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import React, { useState } from 'react';
 import { useTheme } from "../components/ThemeContext";
 import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemoveExercise }) => {
-  const [localSets, setLocalSets] = useState(sets);
-  const [prevWorkoutData, setPrevWorkoutData] = useState([]);
+const ExerciseSet = ({ exercise, sets, prevSets = [], handleSetChange, handleRemoveExercise }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { theme } = useTheme();
 
-  useEffect(() => {
-    setLocalSets(sets);
-  }, [sets]);
-
-  useEffect(() => {
-    const fetchPrevWorkoutData = async () => {
-      try {
-        const userId = currentUser.uid;
-        const workoutsCollectionRef = collection(db, 'users', userId, 'workouts');
-        const q = query(workoutsCollectionRef, orderBy('timestamp', 'desc'));
-        const querySnapshot = await getDocs(q);
-
-        for (const doc of querySnapshot.docs) {
-          const workout = doc.data();
-          const prevSets = workout.exercises.find(ex => ex.Name === exercise.Name)?.sets || [];
-          if (prevSets.length > 0) {
-            setPrevWorkoutData(prevSets);
-            break;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching previous workout data: ', error);
-      }
-    };
-
-    fetchPrevWorkoutData();
-  }, [exercise.Name, currentUser]);
-
   const handleWeightChange = (setIndex, value) => {
-    const newSets = [...localSets];
-    newSets[setIndex].weight = value;
-    setLocalSets(newSets);
-    handleSetChange(exercise.Name, setIndex, 'weight', value);
+    handleSetChange(exercise.instanceId, setIndex, 'weight', value);
   };
 
   const handleRepsChange = (setIndex, value) => {
-    const newSets = [...localSets];
-    newSets[setIndex].reps = value;
-    setLocalSets(newSets);
-    handleSetChange(exercise.Name, setIndex, 'reps', value);
+    handleSetChange(exercise.instanceId, setIndex, 'reps', value);
   };
 
   const addSet = () => {
-    const newSets = [...localSets, { weight: '', reps: '' }];
-    setLocalSets(newSets);
-    handleSetChange(exercise.Name, localSets.length, 'new', { weight: '', reps: '' });
+    handleSetChange(exercise.instanceId, sets.length, 'new', { weight: '', reps: '' });
   };
 
   const deleteLastSet = () => {
-    if (localSets.length === 1) {
-      handleRemoveExercise(exercise.Name);
+    if (sets.length === 1) {
+      handleRemoveExercise(exercise.instanceId);
     } else {
-      const newSets = localSets.slice(0, -1);
-      setLocalSets(newSets);
-      handleSetChange(exercise.Name, localSets.length - 1, 'delete');
+      handleSetChange(exercise.instanceId, sets.length - 1, 'delete');
     }
   };
 
@@ -114,7 +72,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleRemoveExercise(exercise.Name);
+              handleRemoveExercise(exercise.instanceId);
             }}
             className="p-1.5 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-full transition-colors"
             aria-label="Remove exercise"
@@ -147,7 +105,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
             </div>
 
             <div className="space-y-2 mb-4">
-              {localSets.map((set, index) => (
+              {sets.map((set, index) => (
                 <motion.div
                   key={index}
                   className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg border ${getSetStatusClasses(set)}`}
@@ -157,8 +115,8 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
                 >
                   <span className="col-span-1 font-medium text-center">{index + 1}</span>
                   <span className="col-span-4 truncate text-center text-xs text-slate-500 dark:text-slate-400">
-                    {prevWorkoutData[index]
-                      ? `${prevWorkoutData[index].weight} × ${prevWorkoutData[index].reps}`
+                    {prevSets[index]
+                      ? `${prevSets[index].weight} × ${prevSets[index].reps}`
                       : '—'}
                   </span>
                   <input
@@ -179,7 +137,7 @@ const ExerciseSet = ({ exercise, sets, handleSetChange, currentUser, handleRemov
                     inputMode="numeric"
                     pattern="[0-9]*"
                   />
-                  {index === localSets.length - 1 && (
+                  {index === sets.length - 1 && (
                     <button
                       onClick={deleteLastSet}
                       className="col-span-1 text-rose-500 hover:text-rose-700 transition-colors flex justify-center"

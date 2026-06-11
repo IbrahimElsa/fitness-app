@@ -10,9 +10,9 @@ import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from "../components/ThemeContext";
 import { doc, deleteDoc, collection, getDocs, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EmailAuthProvider, reauthenticateWithCredential, deleteUser as firebaseDeleteUser } from "firebase/auth";
-import { db, storage } from "../firebaseConfig";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser as firebaseDeleteUser } from "firebase/auth";
+import { db, storage, googleProvider } from "../firebaseConfig";
 import { Moon, Sun, Camera, LogOut, UserX, User, Mail, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -108,8 +108,10 @@ function Profile() {
                     setError('Please type "delete my account" to confirm.');
                     return;
                 }
+                // deleteUser requires a recent login; reauthenticate Google users via popup
+                await reauthenticateWithPopup(currentUser, googleProvider);
             }
-    
+
             // Fetch and delete all documents in subcollections
             const workoutsCollectionRef = collection(db, `users/${currentUser.uid}/workouts`);
             const workoutDocs = await getDocs(workoutsCollectionRef);
@@ -129,7 +131,16 @@ function Profile() {
             // Delete the user's document from the "users" collection
             const userDocRef = doc(db, "users", currentUser.uid);
             await deleteDoc(userDocRef);
-    
+
+            // Delete the profile picture from Storage (ignore if none was uploaded)
+            try {
+                await deleteObject(ref(storage, `profilePictures/${currentUser.uid}`));
+            } catch (storageError) {
+                if (storageError.code !== 'storage/object-not-found') {
+                    console.error("Error deleting profile picture:", storageError);
+                }
+            }
+
             // Finally, delete the user's authentication data
             await firebaseDeleteUser(currentUser);
             

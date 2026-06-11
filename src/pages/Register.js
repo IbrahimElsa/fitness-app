@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../AuthContext';
+import { usePersistedState } from '../components/PersistedStateProvider';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -16,23 +17,15 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { theme, themeCss } = useTheme();
   const { currentUser, loading } = useAuth();
+  const { state: workoutState } = usePersistedState();
 
   useEffect(() => {
     // Only redirect after auth state is fully loaded
     if (!loading && currentUser) {
-      // Check if there's an active workout
-      const savedIsActive = localStorage.getItem("isActive");
-      const activeWorkoutData = localStorage.getItem("activeWorkout");
-      
-      if (savedIsActive === "true" || (activeWorkoutData && JSON.parse(activeWorkoutData).isActive)) {
-        // Redirect to active workout if there is one
-        navigate('/active-workout');
-      } else {
-        // Otherwise go to home
-        navigate('/');
-      }
+      // Resume an active workout if there is one, otherwise go home
+      navigate(workoutState.isActive ? '/active-workout' : '/');
     }
-  }, [currentUser, loading, navigate]);
+  }, [currentUser, loading, workoutState.isActive, navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();

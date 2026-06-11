@@ -9,6 +9,29 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Remove cached user data so it doesn't leak to the next account on a shared device.
+// Keeps device-level prefs like "theme".
+const clearUserLocalStorage = () => {
+    const exactKeys = [
+        "activeWorkout",
+        "recentWorkouts",
+        "gymVisits",
+        "templates",
+        "workoutTemplates", // legacy key
+        "timerEndTime",
+        // legacy active-workout keys
+        "startTime",
+        "isActive",
+        "timer",
+        "timeLeft",
+    ];
+    exactKeys.forEach((key) => localStorage.removeItem(key));
+
+    Object.keys(localStorage)
+        .filter((key) => key.startsWith("workoutData_") || key.startsWith("workoutDataTimestamp_"))
+        .forEach((key) => localStorage.removeItem(key));
+};
+
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true); // Add loading state to track auth initialization
@@ -24,6 +47,7 @@ export const AuthProvider = ({ children }) => {
     }, [auth]);
 
     const logout = () => {
+        clearUserLocalStorage();
         return signOut(auth);
     };
 

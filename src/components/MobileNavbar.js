@@ -1,5 +1,5 @@
 // src/components/MobileNavbar.js
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, History, PlusCircle, Pencil, BarChart2 } from 'lucide-react';
 import { usePersistedState } from './PersistedStateProvider';
@@ -13,38 +13,9 @@ const MobileNavbar = () => {
   const { isActive: workoutActive } = state;
   const { theme, themeCss } = useTheme();
   const { loading } = useAuth();
-  const [localWorkoutActive, setLocalWorkoutActive] = useState(workoutActive);
-
-  // Check localStorage for active workout in case persisted state not updated yet
-  useEffect(() => {
-    const checkActiveWorkout = () => {
-      const savedIsActive = localStorage.getItem("isActive");
-      const activeWorkoutData = localStorage.getItem("activeWorkout");
-      
-      const isActiveFromLocalStorage = 
-        savedIsActive === "true" || 
-        (activeWorkoutData && JSON.parse(activeWorkoutData).isActive);
-      
-      setLocalWorkoutActive(workoutActive || isActiveFromLocalStorage);
-    };
-
-    checkActiveWorkout();
-  }, [workoutActive]);
 
   const handleWorkoutClick = () => {
-    // Double-check localStorage as well
-    const savedIsActive = localStorage.getItem("isActive");
-    const activeWorkoutData = localStorage.getItem("activeWorkout");
-    
-    const isActiveFromLocalStorage = 
-      savedIsActive === "true" || 
-      (activeWorkoutData && JSON.parse(activeWorkoutData).isActive);
-    
-    if (workoutActive || isActiveFromLocalStorage) {
-      navigate('/active-workout');
-    } else {
-      navigate('/workout');
-    }
+    navigate(workoutActive ? '/active-workout' : '/workout');
   };
 
   const navItems = [
@@ -77,7 +48,7 @@ const MobileNavbar = () => {
             : `${baseClasses} text-slate-500 dark:text-slate-400`;
             
           // Show visual indicator if there's an active workout
-          const showWorkoutIndicator = item.path === '/workout' && localWorkoutActive;
+          const showWorkoutIndicator = item.path === '/workout' && workoutActive;
             
           return item.onClick ? (
             <button

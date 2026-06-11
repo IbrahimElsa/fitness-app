@@ -6,7 +6,7 @@ import MobileNavbar from "../components/MobileNavbar";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc, query, orderBy, limit } from "firebase/firestore";
 import { PlusCircle, Edit, Trash2, Play } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -62,30 +62,28 @@ function Templates() {
 
     const handleLoadTemplate = async (template) => {
         try {
-            // Fetch the previously completed workout sets from Firestore (if any)
+            // Fetch recent workouts so each exercise starts with its most recent set count
             const workoutsCollectionRef = collection(db, "users", currentUser.uid, "workouts");
-            const querySnapshot = await getDocs(workoutsCollectionRef);
+            const q = query(workoutsCollectionRef, orderBy("timestamp", "desc"), limit(20));
+            const querySnapshot = await getDocs(q);
 
-            let previousExercises = template.exercises.map(exercise => ({
+            const previousExercises = template.exercises.map(exercise => ({
                 ...exercise,
                 sets: [{ weight: "", reps: "" }]  // Default to one empty set
             }));
 
-            querySnapshot.forEach(docSnapshot => {
-                const workoutData = docSnapshot.data();
-                workoutData.exercises.forEach(prevExercise => {
-                    const matchingExercise = previousExercises.find(ex => ex.Name === prevExercise.Name);
-                    if (matchingExercise) {
-                        // Maintain the number of previous sets, but initialize with empty values
-                        matchingExercise.sets = prevExercise.sets.map(() => ({
-                            weight: "",
-                            reps: ""
-                        }));
+            for (const exercise of previousExercises) {
+                for (const docSnapshot of querySnapshot.docs) {
+                    const prevExercise = (docSnapshot.data().exercises || []).find(ex => ex.Name === exercise.Name);
+                    if (prevExercise?.sets?.length > 0) {
+                        // Maintain the number of most recent sets, but initialize with empty values
+                        exercise.sets = prevExercise.sets.map(() => ({ weight: "", reps: "" }));
+                        break;
                     }
-                });
-            });
+                }
+            }
 
-            navigate("/active-Workout", { state: { selectedExercises: previousExercises, startTimer: true } });
+            navigate("/active-workout", { state: { selectedExercises: previousExercises, startTimer: true } });
         } catch (error) {
             console.error("Error loading template:", error);
         }

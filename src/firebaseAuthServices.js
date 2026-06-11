@@ -4,7 +4,7 @@ import {
     createUserWithEmailAndPassword,
     signInWithPopup,
 } from "firebase/auth";
-import { doc, setDoc, getFirestore, collection } from "firebase/firestore";
+import { doc, setDoc, getFirestore } from "firebase/firestore";
 import { auth, googleProvider } from './firebaseConfig';
 
 export const login = (email, password) => {
@@ -21,14 +21,6 @@ export const register = async (email, password) => {
         if (user) {
             const userDocRef = doc(db, "users", user.uid);
             await setDoc(userDocRef, {
-                createdAt: new Date(),
-            });
-
-            // Create a 'workouts' subcollection under the user document
-            const workoutsCollectionRef = collection(userDocRef, 'workouts');
-            const initialWorkoutDocRef = doc(workoutsCollectionRef);
-            await setDoc(initialWorkoutDocRef, {
-                initialized: true,
                 createdAt: new Date(),
             });
 

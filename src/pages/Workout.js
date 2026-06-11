@@ -14,8 +14,8 @@ function WorkoutPage() {
     const { theme, themeCss } = useTheme();
     const { currentUser } = useAuth();
     const [templates, setTemplates] = useState(() => {
-        // Load templates from local storage if available
-        const savedTemplates = localStorage.getItem("workoutTemplates");
+        // Load templates from local storage if available (same cache key as Templates page)
+        const savedTemplates = localStorage.getItem("templates");
         return savedTemplates ? JSON.parse(savedTemplates) : [];
     });
     const [currentPage, setCurrentPage] = useState(0);
@@ -30,7 +30,7 @@ function WorkoutPage() {
                     const templatesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setTemplates(templatesData);
                     // Save templates to local storage
-                    localStorage.setItem("workoutTemplates", JSON.stringify(templatesData));
+                    localStorage.setItem("templates", JSON.stringify(templatesData));
                 } catch (error) {
                     console.error("Error fetching templates:", error);
                 }

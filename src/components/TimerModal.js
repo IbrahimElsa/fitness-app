@@ -37,6 +37,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
   // Initialize notifications and load timer state
   useEffect(() => {
     const requestNotificationPermission = async () => {
+      if (!("Notification" in window)) return;
       if (Notification.permission === "default") {
         await Notification.requestPermission();
       }
@@ -83,6 +84,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
           const seconds = newTimeLeft % 60;
 
           if (
+            "Notification" in window &&
             Notification.permission === "granted" &&
             (seconds === 0 || newTimeLeft < 60)
           ) {
@@ -110,7 +112,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
   }, [timeLeft, setTimeLeft, cleanupTimer]);
 
   const sendNotification = (title, body, tag) => {
-    if (Notification.permission === "granted") {
+    if ("Notification" in window && Notification.permission === "granted") {
       new Notification(title, {
         body,
         tag,        // Provide a tag so the OS/browser can group or replace
@@ -126,13 +128,11 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
     localStorage.setItem("timerEndTime", newEndTime.toString());
 
     // Send an immediate notification about the newly set timer
-    if (Notification.permission === "granted") {
-      sendNotification(
-        "Timer Started",
-        `Your timer is set for ${formatTime(newTimeLeft)}.`,
-        "timer-notification"
-      );
-    }
+    sendNotification(
+      "Timer Started",
+      `Your timer is set for ${formatTime(newTimeLeft)}.`,
+      "timer-notification"
+    );
   };
 
   const adjustTime = (seconds) => {

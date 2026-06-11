@@ -6,11 +6,15 @@ import exercisesData from "../components/Exercises.json";
 import MobileNavbar from "../components/MobileNavbar";
 import ExerciseSet from "../components/ExerciseSet";
 import { db } from "../firebaseConfig";
-import { collection, doc, setDoc, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { usePersistedState } from "../components/PersistedStateProvider";
 import TimerModal from "../components/TimerModal";
+
+// Unique id per added exercise so duplicates of the same exercise don't share sets
+const genInstanceId = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 
 function ActiveWorkout() {
   const navigate = useNavigate();
@@ -21,88 +25,112 @@ function ActiveWorkout() {
 
   const selectedExercises = state.selectedExercises || [];
   const localExerciseData = state.localExerciseData || [];
-  const { startTime, isActive, showActiveWorkoutModal, showCancelModal } = state;
+  const { startTime, showActiveWorkoutModal, showCancelModal } = state;
 
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
-    const savedTimeLeft = localStorage.getItem("timeLeft");
-    return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
+    // Restore the rest timer from its persisted end time
+    const savedEndTime = localStorage.getItem("timerEndTime");
+    if (!savedEndTime) return null;
+    const remaining = Math.ceil((parseInt(savedEndTime, 10) - Date.now()) / 1000);
+    return remaining > 0 ? remaining : null;
   });
+  // Elapsed workout time is derived from startTime, so it doesn't need persisting
+  const [elapsed, setElapsed] = useState(0);
+  const [prevSetsByName, setPrevSetsByName] = useState({});
 
   // Auth checking effect - only redirect if we're sure the user isn't authenticated
   useEffect(() => {
-    // Only check auth after loading is complete
-    if (!loading) {
-      // Check if there's an active workout
-      const hasActiveWorkout = localStorage.getItem("isActive") === "true" || 
-                               JSON.parse(localStorage.getItem("activeWorkout") || "{}").isActive === true;
-      
-      // Only redirect to login if no user AND no active workout
-      if (!currentUser && !hasActiveWorkout) {
-        navigate('/login');
-      }
+    // Only redirect to login if no user AND no active workout
+    if (!loading && !currentUser && !state.isActive) {
+      navigate('/login');
     }
-  }, [currentUser, loading, navigate]);
+  }, [currentUser, loading, state.isActive, navigate]);
 
   useEffect(() => {
-    const savedStartTime = localStorage.getItem("startTime");
-    const savedIsActive = localStorage.getItem("isActive");
-
-    if (savedStartTime && savedIsActive === "true") {
-      setState((prevState) => ({
-        ...prevState,
-        startTime: JSON.parse(savedStartTime),
-        isActive: true,
-      }));
-    } else if (location.state?.startTimer) {
-      const currentTime = Date.now();
-      setState((prevState) => ({
-        ...prevState,
-        isActive: true,
-        startTime: currentTime,
-        selectedExercises: location.state.selectedExercises || [],
-        localExerciseData: (location.state.selectedExercises || []).map((ex) => ({
-          Name: ex.Name,
-          Category: ex.Category,
-          Muscle: ex.Muscle,
-          sets: ex.sets || [{ weight: "", reps: "" }],
-        })),
-      }));
-      localStorage.setItem("startTime", JSON.stringify(currentTime));
-      localStorage.setItem("isActive", JSON.stringify(true));
-    }
-  }, [location.state, setState]);
-
-  useEffect(() => {
-    const updateTimer = () => {
-      if (state.startTime && state.isActive) {
-        const currentTime = Date.now();
-        const elapsedTime = Math.floor((currentTime - state.startTime) / 1000);
-        setState((prevState) => ({
-          ...prevState,
-          timer: elapsedTime,
+    if (location.state?.startTimer && !state.isActive) {
+      setState((prevState) => {
+        if (prevState.isActive) return prevState;
+        const exercises = (location.state.selectedExercises || []).map((ex) => ({
+          ...ex,
+          instanceId: genInstanceId(),
         }));
-      }
+        return {
+          ...prevState,
+          isActive: true,
+          startTime: Date.now(),
+          selectedExercises: exercises,
+          localExerciseData: exercises.map((ex) => ({
+            instanceId: ex.instanceId,
+            Name: ex.Name,
+            Category: ex.Category,
+            Muscle: ex.Muscle,
+            sets: ex.sets || [{ weight: "", reps: "" }],
+          })),
+        };
+      });
+    }
+  }, [location.state, state.isActive, setState]);
+
+  // Workouts persisted before instance ids existed need them backfilled
+  useEffect(() => {
+    if (state.isActive && state.selectedExercises?.some((ex) => !ex.instanceId)) {
+      setState((prevState) => {
+        const withIds = prevState.selectedExercises.map((ex) => ({
+          ...ex,
+          instanceId: ex.instanceId || genInstanceId(),
+        }));
+        return {
+          ...prevState,
+          selectedExercises: withIds,
+          localExerciseData: prevState.localExerciseData.map((ex, i) => ({
+            ...ex,
+            instanceId: withIds[i]?.instanceId || genInstanceId(),
+          })),
+        };
+      });
+    }
+  }, [state.isActive, state.selectedExercises, setState]);
+
+  useEffect(() => {
+    if (!state.startTime || !state.isActive) return;
+
+    const updateTimer = () => {
+      setElapsed(Math.floor((Date.now() - state.startTime) / 1000));
     };
 
     const interval = setInterval(updateTimer, 1000);
     updateTimer(); // Call immediately to set the correct time initially
 
     return () => clearInterval(interval);
-  }, [state.startTime, state.isActive, setState]);
+  }, [state.startTime, state.isActive]);
 
+  // Fetch recent workouts once and build a previous-sets lookup for all exercises
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      localStorage.setItem("timer", JSON.stringify(state.timer));
-      localStorage.setItem("isActive", JSON.stringify(isActive));
-      localStorage.setItem("startTime", JSON.stringify(state.startTime));
+    if (!currentUser) return;
+
+    const fetchPrevSets = async () => {
+      try {
+        const workoutsCollectionRef = collection(db, "users", currentUser.uid, "workouts");
+        const q = query(workoutsCollectionRef, orderBy("timestamp", "desc"), limit(20));
+        const querySnapshot = await getDocs(q);
+
+        const prevSets = {};
+        querySnapshot.docs.forEach((docSnapshot) => {
+          (docSnapshot.data().exercises || []).forEach((ex) => {
+            if (!prevSets[ex.Name] && ex.sets?.length > 0) {
+              prevSets[ex.Name] = ex.sets;
+            }
+          });
+        });
+        setPrevSetsByName(prevSets);
+      } catch (error) {
+        console.error("Error fetching previous workout data: ", error);
+      }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [isActive, state.timer, state.startTime]);
+    fetchPrevSets();
+  }, [currentUser]);
 
   const openActiveWorkoutModal = () => {
     setState((prevState) => ({
@@ -119,7 +147,9 @@ function ActiveWorkout() {
   };
 
   const handleAddExercise = (exercise) => {
+    const instanceId = genInstanceId();
     const newExercise = {
+      instanceId,
       Category: exercise.Category,
       Muscle: exercise.Muscle,
       Name: exercise.Name,
@@ -127,17 +157,17 @@ function ActiveWorkout() {
     };
     setState((prevState) => ({
       ...prevState,
-      selectedExercises: [...prevState.selectedExercises, exercise],
+      selectedExercises: [...prevState.selectedExercises, { ...exercise, instanceId }],
       localExerciseData: [...prevState.localExerciseData, newExercise],
       showActiveWorkoutModal: false,
     }));
   };
 
-  const handleRemoveExercise = (exerciseName) => {
+  const handleRemoveExercise = (instanceId) => {
     setState((prevState) => ({
       ...prevState,
-      selectedExercises: prevState.selectedExercises.filter((ex) => ex.Name !== exerciseName),
-      localExerciseData: prevState.localExerciseData.filter((ex) => ex.Name !== exerciseName),
+      selectedExercises: prevState.selectedExercises.filter((ex) => ex.instanceId !== instanceId),
+      localExerciseData: prevState.localExerciseData.filter((ex) => ex.instanceId !== instanceId),
     }));
   };
 
@@ -157,9 +187,6 @@ function ActiveWorkout() {
       
       const userId = currentUser.uid;
       const workoutsCollectionRef = collection(db, "users", userId, "workouts");
-      const querySnapshot = await getDocs(workoutsCollectionRef);
-      const workoutCount = querySnapshot.size;
-      const newWorkoutDocRef = doc(workoutsCollectionRef, `workout ${workoutCount + 1}`);
       const endTime = Date.now();
       const durationInMilliseconds = endTime - startTime;
       const durationInSeconds = Math.floor(durationInMilliseconds / 1000);
@@ -182,14 +209,11 @@ function ActiveWorkout() {
         timestamp: new Date().toISOString(),
       };
 
-      await setDoc(newWorkoutDocRef, workoutData);
+      await addDoc(workoutsCollectionRef, workoutData);
 
       clearState();
-      localStorage.removeItem("timer");
-      localStorage.removeItem("timeLeft");
-      localStorage.removeItem("startTime");
-      localStorage.removeItem("isActive");
-      navigate("/finished-workout");
+      localStorage.removeItem("timerEndTime");
+      navigate("/finished-workout", { state: { workout: workoutData } });
     } catch (error) {
       console.error("Error adding workout: ", error);
     }
@@ -197,29 +221,25 @@ function ActiveWorkout() {
 
   const confirmCancelWorkout = () => {
     clearState();
-    localStorage.removeItem("timer");
-    localStorage.removeItem("timeLeft");
-    localStorage.removeItem("startTime");
-    localStorage.removeItem("isActive");
+    localStorage.removeItem("timerEndTime");
     navigate("/");
   };
 
-  const handleSetChange = (exerciseName, setIndex, field, value) => {
+  const handleSetChange = (instanceId, setIndex, field, value) => {
     setState((prevState) => {
-      const newLocalExerciseData = [...prevState.localExerciseData];
-      const exerciseIndex = newLocalExerciseData.findIndex((ex) => ex.Name === exerciseName);
+      const newLocalExerciseData = prevState.localExerciseData.map((ex) => {
+        if (ex.instanceId !== instanceId) return ex;
 
-      if (exerciseIndex === -1) {
-        return prevState;
-      }
-
-      if (field === "new") {
-        newLocalExerciseData[exerciseIndex].sets.push({ weight: "", reps: "" });
-      } else if (field === "delete") {
-        newLocalExerciseData[exerciseIndex].sets.splice(setIndex, 1);
-      } else {
-        newLocalExerciseData[exerciseIndex].sets[setIndex][field] = value;
-      }
+        if (field === "new") {
+          return { ...ex, sets: [...ex.sets, { weight: "", reps: "" }] };
+        } else if (field === "delete") {
+          return { ...ex, sets: ex.sets.filter((_, i) => i !== setIndex) };
+        }
+        return {
+          ...ex,
+          sets: ex.sets.map((set, i) => (i === setIndex ? { ...set, [field]: value } : set)),
+        };
+      });
 
       return {
         ...prevState,
@@ -251,9 +271,9 @@ function ActiveWorkout() {
               {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
             </button>
             <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === "light" ? "text-gray-800" : "text-white"}`}>
-              {state.timer >= 3600 && `${Math.floor(state.timer / 3600)}:`}
-              {Math.floor((state.timer % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
-              {(state.timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
+              {elapsed >= 3600 && `${Math.floor(elapsed / 3600)}:`}
+              {Math.floor((elapsed % 3600) / 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:
+              {(elapsed % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
             </div>
             <button
               className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
@@ -278,14 +298,14 @@ function ActiveWorkout() {
               </button>
             </div>
           )}
-          {selectedExercises.map((exercise, index) => (
+          {selectedExercises.map((exercise) => (
             <ExerciseSet
-              key={index}
+              key={exercise.instanceId}
               exercise={exercise}
-              sets={localExerciseData.find((ex) => ex.Name === exercise.Name)?.sets || []}
+              sets={localExerciseData.find((ex) => ex.instanceId === exercise.instanceId)?.sets || []}
+              prevSets={prevSetsByName[exercise.Name] || []}
               handleSetChange={handleSetChange}
               handleRemoveExercise={handleRemoveExercise}
-              currentUser={currentUser}
             />
           ))}
           {selectedExercises.length > 0 && (

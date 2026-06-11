@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { useAuth } from "../AuthContext";
@@ -8,30 +8,57 @@ import { useTheme } from "../components/ThemeContext";
 
 const FinishedWorkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useAuth();
   const { theme } = useTheme();
-  const [workoutData, setWorkoutData] = useState(null);
+  // The just-finished workout is passed via navigation state; fetching is only a fallback
+  const [workoutData, setWorkoutData] = useState(location.state?.workout || null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    if (workoutData) return;
+    if (!currentUser) {
+      setNotFound(true);
+      return;
+    }
+
     const fetchWorkoutData = async () => {
       try {
-        const userId = currentUser.uid;
-        const workoutsCollectionRef = collection(db, "users", userId, "workouts");
+        const workoutsCollectionRef = collection(db, "users", currentUser.uid, "workouts");
         const q = query(workoutsCollectionRef, orderBy("timestamp", "desc"), limit(1));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
           setWorkoutData(querySnapshot.docs[0].data());
+        } else {
+          setNotFound(true);
         }
       } catch (error) {
         console.error("Error fetching workout data: ", error);
+        setNotFound(true);
       }
     };
 
     fetchWorkoutData();
-  }, [currentUser]);
+  }, [currentUser, workoutData]);
 
   if (!workoutData) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center gap-4">
+        {notFound ? (
+          <>
+            <p>No finished workout to show.</p>
+            <button
+              className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white"
+              onClick={() => navigate("/")}
+            >
+              HOME
+            </button>
+          </>
+        ) : (
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+        )}
+      </div>
+    );
   }
 
   const containerClass = theme === 'light' ? 'bg-white text-black' : 'bg-gray-800 text-white';
