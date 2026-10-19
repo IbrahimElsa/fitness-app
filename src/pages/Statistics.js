@@ -1,4 +1,7 @@
-// src/pages/Statistics.js - Optimized with local caching
+// src/pages/Statistics.js
+// Reads come straight from Firestore, whose persistent cache serves them
+// offline and already includes locally-written workouts, so a just-finished
+// workout shows up immediately.
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -58,8 +61,8 @@ function StatisticsPage() {
         }
       });
       
-      // Calculate duration
-      if (workout.duration) {
+      // Calculate duration (stored as "HH:MM:SS")
+      if (typeof workout.duration === 'string' && workout.duration.includes(':')) {
         const durationStr = workout.duration;
         const [hours, minutes, seconds] = durationStr.split(':').map(Number);
         totalMinutes += hours * 60 + minutes + seconds / 60;
@@ -117,54 +120,28 @@ function StatisticsPage() {
       }
 
       try {
-        // First try to get data from localStorage to avoid unnecessary fetches
-        const cachedData = localStorage.getItem(`workoutData_${currentUser.uid}`);
-        if (cachedData) {
-          const parsedData = JSON.parse(cachedData);
-          // Check if cache is less than 5 minutes old
-          const cacheTime = localStorage.getItem(`workoutDataTimestamp_${currentUser.uid}`);
-          const now = Date.now();
-          if (cacheTime && now - parseInt(cacheTime) < 5 * 60 * 1000) {
-            // Convert timestamp strings back to Date objects
-            const processedData = parsedData.map(workout => ({
-              ...workout,
-              timestamp: new Date(workout.timestamp)
-            }));
-            setWorkoutData(processedData);
-            calculateWorkoutStats(processedData);
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        // If no valid cache, fetch from Firestore
         setIsLoading(true);
         const workoutsRef = collection(db, "users", currentUser.uid, "workouts");
         const q = query(workoutsRef, orderBy("timestamp", "desc"));
         const workoutsSnapshot = await getDocs(q);
-        
-        const workouts = workoutsSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp)
-          };
-        });
-        
-        // Cache the data in localStorage
-        const workoutsForCache = workouts.map(workout => ({
-          ...workout,
-          timestamp: workout.timestamp.toISOString() // Convert Date to string for JSON
-        }));
-        localStorage.setItem(`workoutData_${currentUser.uid}`, JSON.stringify(workoutsForCache));
-        localStorage.setItem(`workoutDataTimestamp_${currentUser.uid}`, Date.now().toString());
-        
+
+        const workouts = workoutsSnapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp)
+            };
+          })
+          // Older accounts may hold a placeholder doc with no exercises
+          .filter(workout => Array.isArray(workout.exercises));
+
         setWorkoutData(workouts);
         calculateWorkoutStats(workouts);
-        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching workout data:", error);
+      } finally {
         setIsLoading(false);
       }
     };

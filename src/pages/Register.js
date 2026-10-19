@@ -1,9 +1,9 @@
 // src/pages/Register.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register, loginWithGoogle } from '../firebaseAuthServices';
+import { register, loginWithGoogle, authErrorMessage } from '../firebaseAuthServices';
 import MobileNavbar from '../components/MobileNavbar';
-import { Lock, Mail, User } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from '../components/ThemeContext';
@@ -39,20 +39,18 @@ const RegisterPage = () => {
     setError('');
 
     try {
-      const user = await register(email, password);
-      console.log('User created:', user);
+      await register(email, password);
     } catch (error) {
-      setError(error.message);
+      setError(authErrorMessage(error));
     }
   };
 
   const handleGoogleSignUp = async () => {
     setError('');
     try {
-      const user = await loginWithGoogle();
-      console.log('Signed up with Google:', user);
+      await loginWithGoogle();
     } catch (error) {
-      setError(error.message);
+      setError(authErrorMessage(error));
     }
   };
 

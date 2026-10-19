@@ -6,7 +6,7 @@ import exercisesData from "../components/Exercises.json";
 import MobileNavbar from "../components/MobileNavbar";
 import ExerciseSet from "../components/ExerciseSet";
 import { db } from "../firebaseConfig";
-import { collection, doc, setDoc, getDocs } from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 import { useTheme } from "../components/ThemeContext";
 import { useAuth } from "../AuthContext";
 import { usePersistedState } from "../components/PersistedStateProvider";
@@ -28,6 +28,8 @@ function ActiveWorkout() {
     const savedTimeLeft = localStorage.getItem("timeLeft");
     return savedTimeLeft !== null ? JSON.parse(savedTimeLeft) : null;
   });
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [finishError, setFinishError] = useState("");
 
   // Auth checking effect - only redirect if we're sure the user isn't authenticated
   useEffect(() => {
@@ -148,59 +150,71 @@ function ActiveWorkout() {
     }));
   };
 
-  const handleFinishWorkout = async () => {
-    try {
-      if (!currentUser) {
-        console.error("No user is logged in");
-        return;
-      }
-      
-      const userId = currentUser.uid;
-      const workoutsCollectionRef = collection(db, "users", userId, "workouts");
-      const querySnapshot = await getDocs(workoutsCollectionRef);
-      const workoutCount = querySnapshot.size;
-      const newWorkoutDocRef = doc(workoutsCollectionRef, `workout ${workoutCount + 1}`);
-      const endTime = Date.now();
-      const durationInMilliseconds = endTime - startTime;
-      const durationInSeconds = Math.floor(durationInMilliseconds / 1000);
-      const durationString = `${Math.floor(durationInSeconds / 3600).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${Math.floor(
-        (durationInSeconds % 3600) / 60
-      ).toLocaleString(undefined, { minimumIntegerDigits: 2 })}:${(durationInSeconds % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}`;
-
-      const workoutData = {
-        duration: durationString,
-        exercises: localExerciseData.map((exercise) => ({
-          Category: exercise.Category,
-          Muscle: exercise.Muscle,
-          Name: exercise.Name,
-          sets: exercise.sets.filter((set) => set.weight !== "" || set.reps !== "").map((set, index) => ({
-            setNumber: index + 1,
-            weight: set.weight,
-            reps: set.reps,
-          })),
-        })),
-        timestamp: new Date().toISOString(),
-      };
-
-      await setDoc(newWorkoutDocRef, workoutData);
-
-      clearState();
-      localStorage.removeItem("timer");
-      localStorage.removeItem("timeLeft");
-      localStorage.removeItem("startTime");
-      localStorage.removeItem("isActive");
-      navigate("/finished-workout");
-    } catch (error) {
-      console.error("Error adding workout: ", error);
-    }
-  };
-
-  const confirmCancelWorkout = () => {
-    clearState();
+  const clearWorkoutStorage = () => {
     localStorage.removeItem("timer");
     localStorage.removeItem("timeLeft");
     localStorage.removeItem("startTime");
     localStorage.removeItem("isActive");
+    localStorage.removeItem("timerEndTime");
+  };
+
+  const handleFinishWorkout = () => {
+    if (isFinishing) return; // a double tap must not create two workouts
+    setFinishError("");
+
+    if (!currentUser) {
+      setFinishError("Sign in to save this workout. Your progress is kept on this device until you do.");
+      return;
+    }
+
+    const exercises = localExerciseData
+      .map((exercise) => ({
+        Category: exercise.Category,
+        Muscle: exercise.Muscle,
+        Name: exercise.Name,
+        sets: exercise.sets
+          .filter((set) => set.weight !== "" || set.reps !== "")
+          .map((set, index) => ({
+            setNumber: index + 1,
+            weight: set.weight,
+            reps: set.reps,
+          })),
+      }))
+      .filter((exercise) => exercise.sets.length > 0);
+
+    if (exercises.length === 0) {
+      setFinishError("Log at least one set before finishing, or cancel the workout.");
+      return;
+    }
+
+    setIsFinishing(true);
+
+    const durationInSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const pad = (n) => n.toLocaleString(undefined, { minimumIntegerDigits: 2 });
+    const durationString = `${pad(Math.floor(durationInSeconds / 3600))}:${pad(Math.floor((durationInSeconds % 3600) / 60))}:${pad(durationInSeconds % 60)}`;
+
+    const workoutData = {
+      duration: durationString,
+      exercises,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Firestore applies the write to its local cache immediately and syncs it
+    // once the device is online. Awaiting the server acknowledgement would
+    // hang the FINISH button offline, so the promise is intentionally not awaited.
+    const newWorkoutDocRef = doc(collection(db, "users", currentUser.uid, "workouts"));
+    setDoc(newWorkoutDocRef, workoutData).catch((error) => {
+      console.error("Error syncing workout: ", error);
+    });
+
+    clearState();
+    clearWorkoutStorage();
+    navigate("/finished-workout", { state: { workout: workoutData } });
+  };
+
+  const confirmCancelWorkout = () => {
+    clearState();
+    clearWorkoutStorage();
     navigate("/");
   };
 
@@ -248,7 +262,7 @@ function ActiveWorkout() {
               className="timer-button py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
               onClick={() => setIsTimerModalOpen(true)}
             >
-              {timeLeft !== null ? formatTime(timeLeft) : "TIMER"}
+              {timeLeft > 0 ? formatTime(timeLeft) : "TIMER"}
             </button>
             <div className={`timer-display text-center text-2xl pt-1 font-semibold ${theme === "light" ? "text-gray-800" : "text-white"}`}>
               {state.timer >= 3600 && `${Math.floor(state.timer / 3600)}:`}
@@ -256,12 +270,26 @@ function ActiveWorkout() {
               {(state.timer % 60).toLocaleString(undefined, { minimumIntegerDigits: 2 })}
             </div>
             <button
-              className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out"
+              className="py-2 px-4 bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 rounded-full text-white transition duration-150 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed"
               onClick={handleFinishWorkout}
+              disabled={isFinishing}
             >
-              FINISH
+              {isFinishing ? "SAVING…" : "FINISH"}
             </button>
           </div>
+          {finishError && (
+            <div role="alert" className="mx-3 mt-3 p-3 rounded-lg text-sm bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200">
+              {finishError}
+              {!currentUser && (
+                <button
+                  className="ml-2 underline font-medium"
+                  onClick={() => navigate("/login", { state: { returnPath: "/active-workout" } })}
+                >
+                  Sign in
+                </button>
+              )}
+            </div>
+          )}
           {selectedExercises.length === 0 && (
             <div className="flex flex-col items-center">
               <button

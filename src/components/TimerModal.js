@@ -66,15 +66,53 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
     }
   }, [setTimeLeft, cleanupTimer]);
 
-  // Initialize notifications and load timer state
+  // Ask for notification permission only when the user opens the timer. That is
+  // a user gesture browsers accept, unlike the previous request on page mount.
   useEffect(() => {
-    const requestNotificationPermission = async () => {
-      if ("Notification" in window && Notification.permission === "default") {
-        await Notification.requestPermission();
+    if (isOpen && "Notification" in window && Notification.permission === "default") {
+      try {
+        const request = Notification.requestPermission();
+        if (request && typeof request.catch === "function") request.catch(() => {});
+      } catch (error) {
+        // Older Safari uses a callback form; ignore.
       }
-    };
+    }
+  }, [isOpen]);
 
-    requestNotificationPermission();
+  // Audible and haptic cue when the rest timer ends. Notifications alone are
+  // unreliable on mobile browsers, which is where this app is used.
+  const signalTimerComplete = useCallback(() => {
+    try {
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    } catch (error) {
+      // ignore
+    }
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const beep = (startAt) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        const t = ctx.currentTime + startAt;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.4, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.32);
+      };
+      [0, 0.4, 0.8].forEach(beep);
+      setTimeout(() => ctx.close().catch(() => {}), 1500);
+    } catch (error) {
+      // ignore: audio is a nicety, not a requirement
+    }
+  }, []);
+
+  // Load timer state
+  useEffect(() => {
     loadTimerState();
 
     // Add a beforeunload event listener to ensure state is saved when tab closes
@@ -145,7 +183,8 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
     if (timeLeft === 0) {
       cleanupTimer();
       // Timer is done
-      sendNotification("Timer Complete", "Your timer has finished!", "timer-notification");
+      signalTimerComplete();
+      sendNotification("Rest over", "Your rest timer has finished. Back to it!", "timer-notification");
       return;
     }
 
@@ -165,7 +204,7 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
         );
       }
     }
-  }, [timeLeft, cleanupTimer, sendNotification]);
+  }, [timeLeft, cleanupTimer, sendNotification, signalTimerComplete]);
 
   const handleTimeSelection = (minutes) => {
     const newTimeLeft = minutes * 60;
@@ -238,10 +277,8 @@ const TimerModal = ({ isOpen, onClose, timeLeft, setTimeLeft }) => {
               : [-30, -15, 15, 30].map((sec) => (
                   <button
                     key={sec}
-                    className={`timer-button py-2 px-4 ${
-                      sec < 0 ? "bg-red-500" : "bg-green-500"
-                    } text-white rounded hover:${
-                      sec < 0 ? "bg-red-600" : "bg-green-600"
+                    className={`timer-button py-2 px-4 text-white rounded ${
+                      sec < 0 ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
                     }`}
                     onClick={() => adjustTime(sec)}
                   >

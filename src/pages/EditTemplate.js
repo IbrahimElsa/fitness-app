@@ -9,7 +9,7 @@ import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 import SearchExercisesModal from "../components/SearchExercisesModal";
 import exercisesData from "../components/Exercises.json";
 import { PlusCircle, Save, X, Dumbbell, GripVertical } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 function EditTemplate() {
     const navigate = useNavigate();
@@ -193,33 +193,28 @@ function EditTemplate() {
             return;
         }
     
-        try {
-            if (isEditing && templateId) {
-                // If editing an existing template
-                const templateDocRef = doc(db, "users", currentUser.uid, "templates", templateId);
-    
-                await updateDoc(templateDocRef, {
-                    name: templateName,
-                    exercises: selectedExercises,
-                    updatedAt: new Date(),
-                });
-            } else {
-                // If creating a new template
-                const templatesCollectionRef = collection(db, "users", currentUser.uid, "templates");
-    
-                await addDoc(templatesCollectionRef, {
-                    name: templateName,
-                    exercises: selectedExercises,
-                    createdAt: new Date(),
-                });
-            }
-    
-            // Redirect to the templates page after successful save
-            navigate("/templates");
-        } catch (error) {
-            console.error("Error saving template:", error);
-            alert("There was an error saving the template. Please try again.");
+        // Firestore applies these writes locally right away and syncs them when
+        // online. Awaiting the server would hang the Save button offline, so the
+        // promises are not awaited; the Templates page reads from the same cache.
+        const logError = (error) => console.error("Error saving template:", error);
+
+        if (isEditing && templateId) {
+            const templateDocRef = doc(db, "users", currentUser.uid, "templates", templateId);
+            updateDoc(templateDocRef, {
+                name: templateName.trim(),
+                exercises: selectedExercises,
+                updatedAt: new Date(),
+            }).catch(logError);
+        } else {
+            const templatesCollectionRef = collection(db, "users", currentUser.uid, "templates");
+            addDoc(templatesCollectionRef, {
+                name: templateName.trim(),
+                exercises: selectedExercises,
+                createdAt: new Date(),
+            }).catch(logError);
         }
+
+        navigate("/templates");
     };
 
     const getAnimationStyles = (index) => {

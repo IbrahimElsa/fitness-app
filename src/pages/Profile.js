@@ -9,11 +9,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from "../components/ThemeContext";
-import { doc, deleteDoc, collection, getDocs, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { EmailAuthProvider, reauthenticateWithCredential, deleteUser as firebaseDeleteUser } from "firebase/auth";
-import { db, storage } from "../firebaseConfig";
-import { Moon, Sun, Camera, LogOut, UserX, User, Mail, Shield } from 'lucide-react';
+import { doc, deleteDoc, collection, getDocs, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser as firebaseDeleteUser } from "firebase/auth";
+import { db, storage, googleProvider } from "../firebaseConfig";
+import { Moon, Sun, Camera, LogOut, UserX, Mail, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 function Profile() {
@@ -24,7 +24,8 @@ function Profile() {
     const [error, setError] = useState('');
     const [profilePic, setProfilePic] = useState(null);
     const { theme, toggleTheme, themeCss } = useTheme();
-    const [showPencil, setShowPencil] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
     const [confirmText, setConfirmText] = useState('');
     const [profileStats, setProfileStats] = useState({
         workoutCount: 0,
@@ -96,7 +97,7 @@ function Profile() {
         }
     
         try {
-            if (currentUser.providerData[0].providerId === 'password') {
+            if (currentUser.providerData?.[0]?.providerId === 'password') {
                 if (!password) {
                     setError('Please enter your password.');
                     return;
@@ -108,6 +109,8 @@ function Profile() {
                     setError('Please type "delete my account" to confirm.');
                     return;
                 }
+                // deleteUser requires a recent login; reauthenticate Google users via popup
+                await reauthenticateWithPopup(currentUser, googleProvider);
             }
     
             // Fetch and delete all documents in subcollections
@@ -129,7 +132,16 @@ function Profile() {
             // Delete the user's document from the "users" collection
             const userDocRef = doc(db, "users", currentUser.uid);
             await deleteDoc(userDocRef);
-    
+
+            // Delete the profile picture from Storage (ignore if none was uploaded)
+            try {
+                await deleteObject(ref(storage, `profilePictures/${currentUser.uid}`));
+            } catch (storageError) {
+                if (storageError.code !== 'storage/object-not-found') {
+                    console.error("Error deleting profile picture:", storageError);
+                }
+            }
+
             // Finally, delete the user's authentication data
             await firebaseDeleteUser(currentUser);
             
@@ -150,14 +162,31 @@ function Profile() {
     };
 
     const handleProfilePicChange = async (e) => {
-        if (e.target.files[0]) {
-            const file = e.target.files[0];
+        const file = e.target.files?.[0];
+        if (!file || !currentUser) return;
+
+        setUploadError('');
+        if (!navigator.onLine) {
+            // Storage uploads are not queued offline (unlike Firestore writes)
+            setUploadError("You're offline. Connect to the internet to change your photo.");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
             const storageRef = ref(storage, `profilePictures/${currentUser.uid}`);
             await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(storageRef);
-            await updateDoc(doc(db, "users", currentUser.uid), { profilePic: downloadURL });
+            // setDoc + merge also works when users/{uid} doesn't exist yet
+            // (older Google sign-ins), where updateDoc would throw.
+            await setDoc(doc(db, "users", currentUser.uid), { profilePic: downloadURL }, { merge: true });
             setProfilePic(downloadURL);
-            setShowPencil(false);
+        } catch (error) {
+            console.error("Error uploading profile picture:", error);
+            setUploadError("Couldn't upload your photo. Please try again.");
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
         }
     };
 
@@ -212,7 +241,14 @@ function Profile() {
                             onChange={handleProfilePicChange}
                             accept="image/*"
                         />
-                        
+
+                        {isUploading && (
+                            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Uploading photo…</p>
+                        )}
+                        {uploadError && (
+                            <p role="alert" className="mt-3 text-sm text-rose-600 dark:text-rose-400">{uploadError}</p>
+                        )}
+
                         {currentUser && (
                             <div className="mt-4 text-center">
                                 <h2 className="text-xl font-bold">{currentUser.displayName || 'Fitness Enthusiast'}</h2>
@@ -259,7 +295,7 @@ function Profile() {
                                     <span className="ml-3">Theme: {theme === 'light' ? 'Light' : 'Dark'}</span>
                                 </div>
                                 <div className={`w-10 h-5 ${theme === 'light' ? 'bg-slate-300' : 'bg-indigo-600'} rounded-full relative`}>
-                                    <div className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-200 ${theme === 'light' ? 'left-0.5' : 'left-5.5'}`}></div>
+                                    <div className={`absolute w-4 h-4 bg-white rounded-full top-0.5 transition-all duration-200 ${theme === 'light' ? 'left-0.5' : 'left-[22px]'}`}></div>
                                 </div>
                             </button>
 
