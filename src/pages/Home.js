@@ -5,10 +5,8 @@ import Navbar from "../components/Navbar";
 import MobileNavbar from "../components/MobileNavbar";
 import CustomCalendar from "../components/CustomCalendar";
 import { useAuth } from "../AuthContext";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from "../components/ThemeContext";
-import { getDocs, collection, query, getDoc, doc, orderBy, limit } from 'firebase/firestore';
+import { getDocs, collection, query, getDoc, doc, orderBy } from 'firebase/firestore';
 import { db } from "../firebaseConfig";
 import { Calendar, User, Sun, Moon, ChevronRight, Award, Clock, BarChart } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -46,25 +44,25 @@ function Home() {
             streakDays: 0,
             lastWorkout: null
           });
-          localStorage.setItem("gymVisits", JSON.stringify([]));
           return;
         }
 
-        // Process workout dates
-        const workoutDates = snapshot.docs.map(doc => {
-          const data = doc.data();
-          const timestamp = data.timestamp;
-          // Handle different timestamp formats
-          if (timestamp instanceof Date) return timestamp;
-          if (timestamp && timestamp.toDate) return timestamp.toDate();
-          return new Date(timestamp);
-        });
-        
+        // Process workout dates (skip placeholder docs without exercises)
+        const workoutDates = snapshot.docs
+          .filter(doc => Array.isArray(doc.data().exercises))
+          .map(doc => {
+            const data = doc.data();
+            const timestamp = data.timestamp;
+            // Handle different timestamp formats
+            if (timestamp instanceof Date) return timestamp;
+            if (timestamp && timestamp.toDate) return timestamp.toDate();
+            return new Date(timestamp);
+          });
+
         // Sort dates in descending order (newest first)
         workoutDates.sort((a, b) => b - a);
-        
+
         setGymVisits(workoutDates);
-        localStorage.setItem("gymVisits", JSON.stringify(workoutDates.map(date => date.toISOString())));
 
         // Calculate stats
         calculateWorkoutStats(workoutDates);
@@ -254,7 +252,7 @@ function Home() {
                           <span>Toggle Theme</span>
                         </div>
                         <div className={`w-8 h-4 ${theme === 'light' ? 'bg-slate-300' : 'bg-indigo-600'} rounded-full relative`}>
-                          <div className={`absolute w-3 h-3 bg-white rounded-full top-0.5 transition-all duration-200 ${theme === 'light' ? 'left-0.5' : 'left-4.5'}`}></div>
+                          <div className={`absolute w-3 h-3 bg-white rounded-full top-0.5 transition-all duration-200 ${theme === 'light' ? 'left-0.5' : 'left-[18px]'}`}></div>
                         </div>
                       </div>
                     </button>

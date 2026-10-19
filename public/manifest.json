@@ -1,6 +1,7 @@
 {
   "short_name": "Gym Tracker",
-  "name": "Create React App Sample",
+  "name": "Gym Tracker - Workout Log",
+  "description": "Track gym workouts, sets and progress. Works offline.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "theme_color": "#4f46e5",
+  "background_color": "#f8fafc"
 }

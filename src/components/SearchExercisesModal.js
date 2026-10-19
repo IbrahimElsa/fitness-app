@@ -24,6 +24,8 @@ const SearchExercisesModal = ({
 
   useEffect(() => {
     const fetchUserExercises = async () => {
+      // An active workout may continue after auth is lost; only the built-in library is searchable then
+      if (!currentUser) return;
       try {
         const userId = currentUser.uid;
         const userExercisesCollectionRef = collection(db, "users", userId, "exercises");
@@ -57,22 +59,26 @@ const SearchExercisesModal = ({
     onClose();
   };
 
-  const handleAddCustomExercise = async () => {
-    try {
-      const newExercise = {
-        Name: customExerciseName,
-        Category: customExerciseCategory,
-        Muscle: customExerciseMuscle
-      };
-      const userId = currentUser.uid;
-      const userExercisesCollectionRef = collection(db, "users", userId, "exercises");
+  const handleAddCustomExercise = () => {
+    const name = customExerciseName.trim();
+    if (!name) return;
 
-      await addDoc(userExercisesCollectionRef, newExercise);
-      handleAddExercise(newExercise);
-      onClose();
-    } catch (error) {
-      console.error("Error adding custom exercise: ", error);
+    const newExercise = {
+      Name: name,
+      Category: customExerciseCategory || "Other",
+      Muscle: customExerciseMuscle || "Other",
+    };
+
+    if (currentUser) {
+      // Not awaited: Firestore queues the write offline and syncs it later
+      const userExercisesCollectionRef = collection(db, "users", currentUser.uid, "exercises");
+      addDoc(userExercisesCollectionRef, newExercise).catch((error) => {
+        console.error("Error adding custom exercise: ", error);
+      });
     }
+
+    handleAddExercise(newExercise);
+    onClose();
   };
 
   const containerClass = theme === 'light' ? 'bg-white text-gray-800' : 'bg-gray-800 text-white';
@@ -147,8 +153,9 @@ const SearchExercisesModal = ({
                 ))}
               </select>
               <button
-                className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white w-full"
+                className="py-2 px-4 bg-blue-600 hover:bg-blue-700 focus:outline-none rounded text-white w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleAddCustomExercise}
+                disabled={!customExerciseName.trim()}
               >
                 Add Custom Exercise
               </button>

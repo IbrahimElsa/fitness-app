@@ -13,11 +13,8 @@ function WorkoutPage() {
     const navigate = useNavigate();
     const { theme, themeCss } = useTheme();
     const { currentUser } = useAuth();
-    const [templates, setTemplates] = useState(() => {
-        // Load templates from local storage if available
-        const savedTemplates = localStorage.getItem("workoutTemplates");
-        return savedTemplates ? JSON.parse(savedTemplates) : [];
-    });
+    // Served from Firestore's persistent cache when offline; no localStorage copy needed
+    const [templates, setTemplates] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
@@ -29,8 +26,6 @@ function WorkoutPage() {
                     const querySnapshot = await getDocs(templatesCollectionRef);
                     const templatesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     setTemplates(templatesData);
-                    // Save templates to local storage
-                    localStorage.setItem("workoutTemplates", JSON.stringify(templatesData));
                 } catch (error) {
                     console.error("Error fetching templates:", error);
                 }

@@ -12,11 +12,8 @@ import { motion, AnimatePresence } from "framer-motion";
 function HistoryPage() {
     const { theme, themeCss } = useTheme();
     const { currentUser } = useAuth();
-    const [workouts, setWorkouts] = useState(() => {
-        // Load initial workouts from local storage if available
-        const savedWorkouts = localStorage.getItem("recentWorkouts");
-        return savedWorkouts ? JSON.parse(savedWorkouts) : [];
-    });
+    // Firestore's persistent cache serves the first page offline; no localStorage copy needed
+    const [workouts, setWorkouts] = useState([]);
     const [expandedWorkouts, setExpandedWorkouts] = useState({});
     const [lastVisible, setLastVisible] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -65,10 +62,7 @@ function HistoryPage() {
     }, [loading, hasMoreWorkouts, loadMoreWorkouts]);
 
     useEffect(() => {
-        if (!currentUser) {
-            console.log("No current user found.");
-            return;
-        }
+        if (!currentUser) return;
 
         setLoading(true);
 
@@ -77,7 +71,6 @@ function HistoryPage() {
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             if (snapshot.empty) {
-                console.log("No workouts found in the database.");
                 setWorkouts([]);
                 setHasMoreWorkouts(false);
                 setLoading(false);
@@ -90,8 +83,6 @@ function HistoryPage() {
             const workoutsData = snapshot.docs.map(docToWorkout);
 
             setWorkouts(workoutsData);
-            // Save the most recent workouts to local storage
-            localStorage.setItem("recentWorkouts", JSON.stringify(workoutsData));
             setLoading(false);
         }, (error) => {
             console.error("Error fetching workouts:", error);
@@ -103,9 +94,12 @@ function HistoryPage() {
 
     const docToWorkout = (doc) => {
         const data = doc.data();
+        // Older accounts may hold a placeholder doc with no duration/exercises
         const formattedDuration = typeof data.duration === 'string'
             ? data.duration
-            : `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`;
+            : data.duration
+                ? `${data.duration.hours || 0}h ${data.duration.minutes || 0}m ${data.duration.seconds || 0}s`
+                : '—';
 
         const timestamp = data.timestamp;
         let date = timestamp instanceof Date ? timestamp : 
@@ -115,7 +109,7 @@ function HistoryPage() {
         return {
             id: doc.id,
             duration: formattedDuration,
-            exercises: data.exercises,
+            exercises: Array.isArray(data.exercises) ? data.exercises : [],
             date: date,
         };
     };
@@ -287,7 +281,7 @@ function HistoryPage() {
                                                                     <tr key={setIdx} className={`${
                                                                         setIdx % 2 === 0
                                                                             ? theme === 'light' ? 'bg-white' : 'bg-slate-800'
-                                                                            : theme === 'light' ? 'bg-slate-50' : 'bg-slate-750'
+                                                                            : theme === 'light' ? 'bg-slate-50' : 'bg-slate-700/50'
                                                                     }`}>
                                                                         <td className="px-3 py-2 whitespace-nowrap text-sm">{setIdx + 1}</td>
                                                                         <td className="px-3 py-2 whitespace-nowrap text-sm">{set.weight} lb</td>

@@ -1,7 +1,7 @@
 // src/pages/Login.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { login, loginWithGoogle } from '../firebaseAuthServices';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { login, loginWithGoogle, authErrorMessage } from '../firebaseAuthServices';
 import { useAuth } from '../AuthContext';
 import MobileNavbar from '../components/MobileNavbar';
 import { Lock, Mail } from 'lucide-react';
@@ -12,8 +12,11 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, loading } = useAuth();
+  const returnPath = location.state?.returnPath;
 
   useEffect(() => {
     // Only redirect after auth state is fully loaded
@@ -21,36 +24,40 @@ const LoginPage = () => {
       // Check if there's an active workout
       const savedIsActive = localStorage.getItem("isActive");
       const activeWorkoutData = localStorage.getItem("activeWorkout");
-      
+
       if (savedIsActive === "true" || (activeWorkoutData && JSON.parse(activeWorkoutData).isActive)) {
         // Redirect to active workout if there is one
-        navigate('/active-workout');
+        navigate('/active-workout', { replace: true });
       } else {
-        // Otherwise go to home
-        navigate('/');
+        // Otherwise back to where the user was headed, or home
+        navigate(returnPath || '/', { replace: true });
       }
     }
-  }, [currentUser, loading, navigate]);
+  }, [currentUser, loading, navigate, returnPath]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
 
     try {
       await login(email, password);
-      console.log('Logged in');
     } catch (error) {
-      setError(error.message);
+      setError(authErrorMessage(error));
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setError('');
+    setSubmitting(true);
     try {
-      const user = await loginWithGoogle();
-      console.log('Logged in with Google:', user);
+      await loginWithGoogle();
     } catch (error) {
-      setError(error.message);
+      setError(authErrorMessage(error));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -131,9 +138,10 @@ const LoginPage = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+                disabled={submitting}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Sign in
+                {submitting ? 'Signing in…' : 'Sign in'}
               </button>
             </div>
           </form>
@@ -153,7 +161,8 @@ const LoginPage = () => {
             <div className="mt-6">
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition duration-150 ease-in-out"
+                disabled={submitting}
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition duration-150 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FontAwesomeIcon icon={faGoogle} className="h-5 w-5 text-white mr-2" />
                 Sign in with Google
